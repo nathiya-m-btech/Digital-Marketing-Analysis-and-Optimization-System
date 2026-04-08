@@ -4,6 +4,7 @@ import { Bell, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { notifications } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const navItems = [
   { path: '/', label: 'Home' },
@@ -25,9 +26,13 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 glass">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold text-primary">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center text-primary-foreground text-sm font-bold">M</div>
-          MarketPulse
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+            M
+          </div>
+          <span className="font-display text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+            MarketPulse
+          </span>
         </Link>
 
         {/* Desktop nav */}
@@ -48,6 +53,8 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
+
           {isAuthenticated ? (
             <>
               <div className="relative">
@@ -69,8 +76,12 @@ export default function Header() {
                 )}
               </div>
               <Link to="/profile" className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors">
-                <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-                  {user?.name.charAt(0)}
+                <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold overflow-hidden">
+                  {user?.profile_image ? (
+                    <img src={user.profile_image} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name.charAt(0)
+                  )}
                 </div>
                 <span className="text-sm font-medium">{user?.name}</span>
               </Link>
