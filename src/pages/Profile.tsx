@@ -50,24 +50,6 @@ export default function Profile() {
     );
   }
 
-  const drawCanvas = useCallback((img: HTMLImageElement, s: number, ox: number, oy: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const size = 200;
-    canvas.width = size;
-    canvas.height = size;
-    ctx.clearRect(0, 0, size, size);
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-    ctx.clip();
-    const w = img.width * s;
-    const h = img.height * s;
-    const x = (size - w) / 2 + ox;
-    const y = (size - h) / 2 + oy;
-    ctx.drawImage(img, x, y, w, h);
-  }, []);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
