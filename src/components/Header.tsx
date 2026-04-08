@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, LogOut, Menu, X } from 'lucide-react';
+import { Bell, LogOut, Menu, X, CheckCheck } from 'lucide-react';
 import { useState } from 'react';
-import { notifications } from '@/data/mockData';
+import { notifications as initialNotifs } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
+import type { Notification } from '@/types';
 
 const navItems = [
   { path: '/', label: 'Home' },
@@ -13,6 +14,8 @@ const navItems = [
   { path: '/roi-simulator', label: 'ROI Simulator' },
   { path: '/platform-comparison', label: 'Platforms' },
   { path: '/surveys', label: 'Surveys' },
+  { path: '/seasonal-insights', label: 'Seasons' },
+  { path: '/product-portfolio', label: 'Products' },
   { path: '/about', label: 'About' },
 ];
 
@@ -21,7 +24,13 @@ export default function Header() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const unread = notifications.filter(n => !n.read_status).length;
+  const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
+
+  const unread = notifs.filter(n => !n.read_status).length;
+
+  const markAllRead = () => {
+    setNotifs(prev => prev.map(n => ({ ...n, read_status: true })));
+  };
 
   return (
     <header className="sticky top-0 z-50 glass">
@@ -35,8 +44,7 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {navItems.map(item => (
             <Link
               key={item.path}
@@ -66,8 +74,15 @@ export default function Header() {
                 </button>
                 {notifOpen && (
                   <div className="absolute right-0 top-12 w-80 bg-card border border-border rounded-xl shadow-xl p-3 space-y-2 animate-slide-up">
-                    <p className="text-sm font-semibold mb-2">Notifications</p>
-                    {notifications.slice(0, 5).map(n => (
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold">Notifications</p>
+                      {unread > 0 && (
+                        <button onClick={markAllRead} className="flex items-center gap-1 text-xs text-primary hover:underline">
+                          <CheckCheck className="w-3.5 h-3.5" /> Mark all read
+                        </button>
+                      )}
+                    </div>
+                    {notifs.slice(0, 5).map(n => (
                       <div key={n._id} className={`p-2 rounded-lg text-xs ${n.read_status ? 'text-muted-foreground' : 'bg-primary/5 text-foreground font-medium'}`}>
                         {n.message}
                       </div>
@@ -96,15 +111,14 @@ export default function Header() {
             </div>
           )}
 
-          <button className="md:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+          <button className="lg:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile nav */}
       {mobileOpen && (
-        <nav className="md:hidden border-t border-border bg-card p-4 space-y-1 animate-slide-up">
+        <nav className="lg:hidden border-t border-border bg-card p-4 space-y-1 animate-slide-up">
           {navItems.map(item => (
             <Link
               key={item.path}

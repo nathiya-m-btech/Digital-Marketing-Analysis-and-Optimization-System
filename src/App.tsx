@@ -14,6 +14,8 @@ import PlatformComparison from "./pages/PlatformComparison";
 import Surveys from "./pages/Surveys";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
+import SeasonalInsights from "./pages/SeasonalInsights";
+import ProductPortfolio from "./pages/ProductPortfolio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/roi-simulator" element={<ROISimulator />} />
             <Route path="/platform-comparison" element={<PlatformComparison />} />
             <Route path="/surveys" element={<Surveys />} />
+            <Route path="/seasonal-insights" element={<SeasonalInsights />} />
+            <Route path="/product-portfolio" element={<ProductPortfolio />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<About />} />
             <Route path="*" element={<NotFound />} />

@@ -35,7 +35,7 @@ export default function ROISimulator() {
           </div>
 
           <div className="border-t border-border pt-6">
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
               <div className={`rounded-xl p-5 text-center ${isPositive ? 'bg-success/10' : 'bg-destructive/10'}`}>
                 <div className="flex items-center justify-center mb-2">
                   {isPositive ? <TrendingUp className="w-6 h-6 text-success" /> : <TrendingDown className="w-6 h-6 text-destructive" />}
@@ -47,10 +47,6 @@ export default function ROISimulator() {
                 <Calculator className="w-6 h-6 mx-auto mb-2 text-primary" />
                 <p className="text-3xl font-bold font-display">${profit.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground mt-1">Net Profit</p>
-              </div>
-              <div className="bg-muted rounded-xl p-5 text-center">
-                <p className="text-sm text-muted-foreground mb-2">Formula</p>
-                <p className="text-xs font-mono bg-background rounded-lg p-2">(Revenue - Budget) / Budget × 100</p>
               </div>
             </div>
           </div>

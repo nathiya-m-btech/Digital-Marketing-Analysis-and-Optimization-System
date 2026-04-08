@@ -3,23 +3,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Shield, Camera, Check } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { User, Mail, Shield, Camera, Check, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 export default function Profile() {
   const { user, isAuthenticated, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [previewImage, setPreviewImage] = useState<string | undefined>(user?.profile_image);
 
-  // Sync state when user changes
-  if (user && name === '' && email === '') {
-    // Initial load
-  }
+  // Image editor state
+  const [rawImage, setRawImage] = useState<HTMLImageElement | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [offsetX, setOffsetX] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
 
   if (!isAuthenticated || !user) {
     return (
@@ -30,16 +33,58 @@ export default function Profile() {
     );
   }
 
+  const drawCanvas = useCallback((img: HTMLImageElement, s: number, ox: number, oy: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const size = 200;
+    canvas.width = size;
+    canvas.height = size;
+    ctx.clearRect(0, 0, size, size);
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.clip();
+    const w = img.width * s;
+    const h = img.height * s;
+    const x = (size - w) / 2 + ox;
+    const y = (size - h) / 2 + oy;
+    ctx.drawImage(img, x, y, w, h);
+  }, []);
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setPreviewImage(result);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        setRawImage(img);
+        const initScale = 200 / Math.min(img.width, img.height);
+        setScale(initScale);
+        setOffsetX(0);
+        setOffsetY(0);
+        setShowEditor(true);
+        setTimeout(() => drawCanvas(img, initScale, 0, 0), 50);
       };
-      reader.readAsDataURL(file);
-    }
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const updateCanvas = (newScale: number, newOx: number, newOy: number) => {
+    setScale(newScale);
+    setOffsetX(newOx);
+    setOffsetY(newOy);
+    if (rawImage) drawCanvas(rawImage, newScale, newOx, newOy);
+  };
+
+  const applyImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setPreviewImage(canvas.toDataURL('image/jpeg', 0.9));
+    setShowEditor(false);
+    setRawImage(null);
   };
 
   const handleSave = () => {
@@ -48,10 +93,7 @@ export default function Profile() {
       email: email || user.email,
       profile_image: previewImage,
     });
-    toast({
-      title: 'Profile updated',
-      description: 'Your changes have been saved successfully.',
-    });
+    toast({ title: 'Profile updated', description: 'Your changes have been saved successfully.' });
   };
 
   return (
@@ -68,19 +110,10 @@ export default function Profile() {
                 user.name.charAt(0)
               )}
             </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted transition-colors"
-            >
+            <button onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted transition-colors">
               <Camera className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoUpload}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
           </div>
           <div>
             <h2 className="font-display text-xl font-bold">{name || user.name}</h2>
@@ -88,24 +121,54 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Image Editor */}
+        {showEditor && (
+          <div className="mb-6 bg-muted/50 border border-border rounded-xl p-6 animate-slide-up">
+            <p className="text-sm font-semibold mb-4">Resize & Position Photo</p>
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative bg-muted rounded-full overflow-hidden" style={{ width: 200, height: 200 }}>
+                <canvas ref={canvasRef} width={200} height={200} className="w-full h-full" />
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => updateCanvas(Math.max(scale * 0.8, 0.05), offsetX, offsetY)} className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <input type="range" min={0.05} max={3} step={0.01} value={scale} onChange={e => updateCanvas(Number(e.target.value), offsetX, offsetY)} className="w-40 accent-primary" />
+                <button onClick={() => updateCanvas(Math.min(scale * 1.25, 3), offsetX, offsetY)} className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">X:</span>
+                  <input type="range" min={-200} max={200} value={offsetX} onChange={e => updateCanvas(scale, Number(e.target.value), offsetY)} className="w-24 accent-primary" />
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Y:</span>
+                  <input type="range" min={-200} max={200} value={offsetY} onChange={e => updateCanvas(scale, offsetX, Number(e.target.value))} className="w-24 accent-primary" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={applyImage} className="gradient-primary text-primary-foreground border-0">
+                  <Check className="w-4 h-4 mr-1" /> Apply
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => { if (rawImage) { const s = 200 / Math.min(rawImage.width, rawImage.height); updateCanvas(s, 0, 0); } }}>
+                  <RotateCcw className="w-4 h-4 mr-1" /> Reset
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowEditor(false)}>Cancel</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div>
             <Label className="flex items-center gap-2"><User className="w-4 h-4" /> Full Name</Label>
-            <Input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder={user.name}
-              className="mt-1"
-            />
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder={user.name} className="mt-1" />
           </div>
           <div>
             <Label className="flex items-center gap-2"><Mail className="w-4 h-4" /> Email</Label>
-            <Input
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder={user.email}
-              className="mt-1"
-            />
+            <Input value={email} onChange={e => setEmail(e.target.value)} placeholder={user.email} className="mt-1" />
           </div>
           <div>
             <Label className="flex items-center gap-2"><Shield className="w-4 h-4" /> Role</Label>
