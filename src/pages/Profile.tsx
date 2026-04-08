@@ -16,13 +16,30 @@ export default function Profile() {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [previewImage, setPreviewImage] = useState<string | undefined>(user?.profile_image);
-
-  // Image editor state
   const [rawImage, setRawImage] = useState<HTMLImageElement | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [scale, setScale] = useState(1);
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
+
+  const drawCanvas = useCallback((img: HTMLImageElement, s: number, ox: number, oy: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const size = 200;
+    canvas.width = size;
+    canvas.height = size;
+    ctx.clearRect(0, 0, size, size);
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.clip();
+    const w = img.width * s;
+    const h = img.height * s;
+    const x = (size - w) / 2 + ox;
+    const y = (size - h) / 2 + oy;
+    ctx.drawImage(img, x, y, w, h);
+  }, []);
 
   if (!isAuthenticated || !user) {
     return (
