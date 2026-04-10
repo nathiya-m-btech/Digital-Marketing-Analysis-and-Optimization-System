@@ -1,9 +1,31 @@
 import { products, campaigns, seasons } from '@/data/mockData';
-import { ShoppingBag, Sun, CloudRain, Snowflake, PartyPopper, TrendingUp, DollarSign, Target } from 'lucide-react';
+import { ShoppingBag, Sun, CloudRain, Snowflake, PartyPopper, TrendingUp, DollarSign, Target, Droplets, Shirt, Home, Gift, Cpu, Umbrella, Lamp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts';
 
 const seasonIcons: Record<string, React.ElementType> = {
   Summer: Sun, Rainy: CloudRain, Winter: Snowflake, Festival: PartyPopper,
+};
+
+const productIcons: Record<string, React.ElementType> = {
+  'Sunscreen Pro': Sun,
+  'Rain Jacket Elite': Droplets,
+  'Thermal Mug': Home,
+  'Gift Hamper Deluxe': Gift,
+  'Fitness Tracker X': Cpu,
+  'Umbrella Ultra': Umbrella,
+  'Wool Sweater': Shirt,
+  'Party Lights Set': Lamp,
+};
+
+const productColors: Record<string, string> = {
+  'Sunscreen Pro': '#F59E0B',
+  'Rain Jacket Elite': '#3B82F6',
+  'Thermal Mug': '#8B5CF6',
+  'Gift Hamper Deluxe': '#EC4899',
+  'Fitness Tracker X': '#10B981',
+  'Umbrella Ultra': '#06B6D4',
+  'Wool Sweater': '#6366F1',
+  'Party Lights Set': '#F97316',
 };
 
 export default function ProductPortfolio() {
@@ -17,12 +39,8 @@ export default function ProductPortfolio() {
   });
 
   const chartData = productData.map(p => ({ name: p.name.split(' ')[0], Sales: p.sales, Revenue: p.totalRevenue }));
-
   const radarData = productData.slice(0, 6).map(p => ({
-    name: p.name.split(' ')[0],
-    ROI: p.avgROI,
-    Success: p.avgSuccess,
-    Sales: Math.round(p.sales / 1000),
+    name: p.name.split(' ')[0], ROI: p.avgROI, Success: p.avgSuccess, Sales: Math.round(p.sales / 1000),
   }));
 
   const totalSales = products.reduce((s, p) => s + p.sales, 0);
@@ -36,7 +54,6 @@ export default function ProductPortfolio() {
         <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Explore our complete product lineup with performance metrics, seasonal mapping, and campaign analytics.</p>
       </div>
 
-      {/* Summary KPIs */}
       <div className="grid sm:grid-cols-3 gap-4 mb-10">
         <div className="bg-card border border-border rounded-xl p-5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"><ShoppingBag className="w-6 h-6 text-primary" /></div>
@@ -52,7 +69,6 @@ export default function ProductPortfolio() {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6 mb-12">
         <div className="bg-card border border-border rounded-xl p-6">
           <h3 className="font-display font-semibold text-lg mb-4">Sales & Revenue by Product</h3>
@@ -83,18 +99,20 @@ export default function ProductPortfolio() {
         </div>
       </div>
 
-      {/* Product Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {productData.map((product, i) => {
           const SeasonIcon = seasonIcons[product.season_peak];
+          const ProductIcon = productIcons[product.name] || ShoppingBag;
+          const productColor = productColors[product.name] || '#7C3AED';
           return (
             <div key={product._id} className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="h-1.5 gradient-primary" />
+              {/* Product Image/Icon Header */}
+              <div className="h-32 flex items-center justify-center relative" style={{ backgroundColor: `${productColor}12` }}>
+                <div className="absolute inset-0 opacity-5" style={{ background: `radial-gradient(circle at 50% 50%, ${productColor}, transparent 70%)` }} />
+                <ProductIcon className="w-16 h-16" style={{ color: productColor }} />
+              </div>
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <ShoppingBag className="w-5 h-5 text-primary" />
-                  </div>
                   <div>
                     <h3 className="font-display font-semibold">{product.name}</h3>
                     <span className="text-xs text-muted-foreground">{product.category}</span>

@@ -55,16 +55,26 @@ export default function Home() {
                 Track, analyze, and optimize campaigns across 6 platforms. Real-time dashboards, seasonal insights, and intelligent ROI simulation.
               </p>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start animate-slide-up" style={{ animationDelay: '300ms' }}>
-                <Link to={isAuthenticated ? '/dashboard' : '/login'}>
-                  <Button size="lg" className="gradient-primary text-primary-foreground border-0 px-8 text-base shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
-                    {isAuthenticated ? 'Go to Dashboard' : 'Get Started'} <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link to="/dashboard">
-                  <Button size="lg" variant="outline" className="px-8 text-base hover:scale-105 transition-all duration-300">
-                    View Demo
-                  </Button>
-                </Link>
+                {isAuthenticated ? (
+                  <Link to="/dashboard">
+                    <Button size="lg" className="gradient-primary text-primary-foreground border-0 px-8 text-base shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                      Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/login">
+                      <Button size="lg" className="gradient-primary text-primary-foreground border-0 px-8 text-base shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                        Get Started <ArrowRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    </Link>
+                    <Link to="/dashboard">
+                      <Button size="lg" variant="outline" className="px-8 text-base hover:scale-105 transition-all duration-300">
+                        View Demo
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 

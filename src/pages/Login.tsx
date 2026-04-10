@@ -20,7 +20,7 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const success = isSignup ? signup(name, email, password, role) : login(email, password);
-    if (success) navigate('/dashboard');
+    if (success) navigate('/');
   };
 
   return (
@@ -56,6 +56,7 @@ export default function Login() {
               >
                 {roles.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
+              <p className="text-xs text-muted-foreground mt-1">Your role determines your dashboard view</p>
             </div>
           )}
           <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0">

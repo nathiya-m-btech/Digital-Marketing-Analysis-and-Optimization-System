@@ -3,10 +3,24 @@ import { campaigns, platforms, seasons, products } from '@/data/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 import { DollarSign, TrendingUp, Target, BarChart3, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import RoleDashboard from '@/components/RoleDashboard';
 
 const COLORS = ['#7C3AED', '#06B6D4', '#F59E0B', '#EF4444', '#10B981', '#3B82F6'];
 
 export default function Dashboard() {
+  const { user, isAuthenticated } = useAuth();
+
+  // If logged in, show role-specific dashboard
+  if (isAuthenticated && user) {
+    return <RoleDashboard role={user.role} userName={user.name} />;
+  }
+
+  // Demo dashboard for non-logged-in users
+  return <DemoDashboard />;
+}
+
+function DemoDashboard() {
   const [platformFilter, setPlatformFilter] = useState('All');
   const [seasonFilter, setSeasonFilter] = useState('All');
   const [dateFrom, setDateFrom] = useState('');
@@ -51,7 +65,6 @@ export default function Dashboard() {
     category: p.category,
   }));
 
-  // Drill-down data
   const drillData = drillPlatform
     ? filtered.filter(c => c.platform === drillPlatform).map(c => ({
         name: c.name.length > 20 ? c.name.slice(0, 20) + '…' : c.name,
@@ -75,7 +88,6 @@ export default function Dashboard() {
   };
 
   const downloadPDF = () => {
-    // Build a printable HTML report and trigger print
     const reportHTML = `
       <html><head><title>MarketPulse Report</title>
       <style>
@@ -91,7 +103,7 @@ export default function Dashboard() {
         .kpi-value { font-size: 24px; font-weight: bold; }
       </style></head><body>
       <h1>📊 MarketPulse Analytics Report</h1>
-      <p style="color:#666">Generated on ${new Date().toLocaleDateString()}</p>
+      <p style="color:#666">Generated on ${new Date().toLocaleDateString()} (Demo)</p>
       <div class="kpi-row">
         ${kpis.map(k => `<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div></div>`).join('')}
       </div>
@@ -100,32 +112,18 @@ export default function Dashboard() {
         <tr><th>Campaign</th><th>Platform</th><th>Budget</th><th>Revenue</th><th>ROI</th><th>Season</th><th>Status</th></tr>
         ${filtered.map(c => `<tr><td>${c.name}</td><td>${c.platform}</td><td>$${c.budget.toLocaleString()}</td><td>$${c.revenue.toLocaleString()}</td><td>${c.ROI}%</td><td>${c.season}</td><td>${c.status}</td></tr>`).join('')}
       </table>
-      <h2>ROI by Platform</h2>
-      <table>
-        <tr><th>Platform</th><th>Average ROI</th><th>Total Revenue</th><th>Total Budget</th></tr>
-        ${roiByPlatform.map(r => `<tr><td>${r.platform}</td><td>${r.ROI}%</td><td>$${r.revenue.toLocaleString()}</td><td>$${r.budget.toLocaleString()}</td></tr>`).join('')}
-      </table>
-      <h2>Seasonal Performance</h2>
-      <table>
-        <tr><th>Season</th><th>Revenue</th><th>Budget</th></tr>
-        ${seasonalData.map(s => `<tr><td>${s.season}</td><td>$${s.revenue.toLocaleString()}</td><td>$${s.budget.toLocaleString()}</td></tr>`).join('')}
-      </table>
       </body></html>
     `;
     const win = window.open('', '_blank');
-    if (win) {
-      win.document.write(reportHTML);
-      win.document.close();
-      win.print();
-    }
+    if (win) { win.document.write(reportHTML); win.document.close(); win.print(); }
   };
 
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your marketing performance</p>
+          <h1 className="font-display text-3xl font-bold">Demo Dashboard</h1>
+          <p className="text-muted-foreground">Overview of marketing performance · <span className="text-primary font-medium">Sign in for your personalized dashboard</span></p>
         </div>
         <div className="flex gap-3 flex-wrap items-end">
           <div className="flex flex-col gap-1">
@@ -150,7 +148,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {kpis.map((kpi, i) => (
           <div key={i} className="bg-card border border-border rounded-xl p-5 hover:shadow-lg transition-shadow animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
@@ -163,24 +160,22 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-card border border-border rounded-xl p-6">
           <h3 className="font-display font-semibold mb-1">ROI by Platform</h3>
-          <p className="text-xs text-muted-foreground mb-4">Click a bar to drill down into campaigns</p>
+          <p className="text-xs text-muted-foreground mb-4">Click a bar to drill down</p>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={roiByPlatform} onClick={(e) => e?.activePayload && handleBarClick(e.activePayload[0]?.payload)}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="platform" tick={{ fontSize: 11 }} />
               <YAxis />
-              <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+              <Tooltip />
               <Bar dataKey="ROI" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} cursor="pointer" />
             </BarChart>
           </ResponsiveContainer>
         </div>
-
         <div className="bg-card border border-border rounded-xl p-6">
-          <h3 className="font-display font-semibold mb-4">Revenue Share by Platform</h3>
+          <h3 className="font-display font-semibold mb-4">Revenue Share</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie data={platformShare} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name }) => name}>
@@ -192,11 +187,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Drill-down */}
       {drillPlatform && drillData.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-6 mb-6 animate-slide-up">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display font-semibold">📊 {drillPlatform} Campaign Breakdown</h3>
+            <h3 className="font-display font-semibold">📊 {drillPlatform} Breakdown</h3>
             <Button variant="ghost" size="sm" onClick={() => setDrillPlatform(null)}>Close</Button>
           </div>
           <ResponsiveContainer width="100%" height={250}>
@@ -228,7 +222,6 @@ export default function Dashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
         <div className="bg-card border border-border rounded-xl p-6">
           <h3 className="font-display font-semibold mb-4">Product Performance</h3>
           <ResponsiveContainer width="100%" height={300}>

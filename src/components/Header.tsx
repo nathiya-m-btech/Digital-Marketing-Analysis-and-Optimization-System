@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, LogOut, Menu, X, CheckCheck } from 'lucide-react';
+import { Bell, LogOut, Menu, X, CheckCheck, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { notifications as initialNotifs } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import type { Notification } from '@/types';
 
-const navItems = [
+const publicNavItems = [
   { path: '/', label: 'Home' },
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/campaigns', label: 'Campaigns' },
@@ -17,6 +17,7 @@ const navItems = [
   { path: '/seasonal-insights', label: 'Seasons' },
   { path: '/product-portfolio', label: 'Products' },
   { path: '/about', label: 'About' },
+  { path: '/contact', label: 'Contact' },
 ];
 
 export default function Header() {
@@ -31,6 +32,11 @@ export default function Header() {
   const markAllRead = () => {
     setNotifs(prev => prev.map(n => ({ ...n, read_status: true })));
   };
+
+  // Settings link only visible when logged in
+  const navItems = isAuthenticated
+    ? [...publicNavItems, { path: '/profile', label: 'Settings' }]
+    : publicNavItems;
 
   return (
     <header className="sticky top-0 z-50 glass">
