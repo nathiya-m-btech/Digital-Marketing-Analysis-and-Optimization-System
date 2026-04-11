@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, LogOut, Menu, X, CheckCheck, Settings } from 'lucide-react';
+import { Bell, LogOut, Menu, X, CheckCheck } from 'lucide-react';
 import { useState } from 'react';
 import { notifications as initialNotifs } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import type { Notification } from '@/types';
+import logoImg from '@/assets/marketpulse-logo.png';
 
 const publicNavItems = [
   { path: '/', label: 'Home' },
@@ -33,7 +34,6 @@ export default function Header() {
     setNotifs(prev => prev.map(n => ({ ...n, read_status: true })));
   };
 
-  // Settings link only visible when logged in
   const navItems = isAuthenticated
     ? [...publicNavItems, { path: '/profile', label: 'Settings' }]
     : publicNavItems;
@@ -42,9 +42,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 glass">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
-            M
-          </div>
+          <img src={logoImg} alt="MarketPulse" className="w-9 h-9 group-hover:scale-110 transition-transform duration-300" />
           <span className="font-display text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
             MarketPulse
           </span>

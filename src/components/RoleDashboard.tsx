@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { campaigns, platforms, seasons, products, surveys } from '@/data/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye } from 'lucide-react';
+import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { UserRole } from '@/types';
 
 const COLORS = ['#7C3AED', '#06B6D4', '#F59E0B', '#EF4444', '#10B981', '#3B82F6'];
@@ -9,6 +10,55 @@ const COLORS = ['#7C3AED', '#06B6D4', '#F59E0B', '#EF4444', '#10B981', '#3B82F6'
 interface RoleDashboardProps {
   role: UserRole;
   userName: string;
+}
+
+function generateDashboardPDF(role: UserRole, userName: string) {
+  const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
+  const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
+  const avgROI = Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length);
+  const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
+
+  const html = `<html><head><title>${role} Dashboard Report</title>
+    <style>
+      body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1a1a1a; }
+      h1 { color: #6366f1; font-size: 24px; margin-bottom: 4px; }
+      .subtitle { color: #888; font-size: 13px; margin-bottom: 24px; }
+      .kpis { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+      .kpi { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 20px; min-width: 140px; }
+      .kpi .label { font-size: 11px; color: #888; text-transform: uppercase; }
+      .kpi .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 16px; }
+      th { background: #f3f4f6; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e5e7eb; font-weight: 600; }
+      td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; }
+      .positive { color: #22c55e; font-weight: 600; }
+      .status { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+      .status-Active { background: #dcfce7; color: #16a34a; }
+      .status-Paused { background: #fef3c7; color: #d97706; }
+      .status-Completed { background: #f3f4f6; color: #6b7280; }
+      .footer { margin-top: 30px; text-align: center; color: #aaa; font-size: 10px; }
+    </style></head><body>
+    <h1>📊 ${role} Dashboard Report</h1>
+    <p class="subtitle">Generated for ${userName} on ${new Date().toLocaleDateString()} · Role: ${role}</p>
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total Revenue</div><div class="value">$${(totalRevenue / 1000).toFixed(0)}K</div></div>
+      <div class="kpi"><div class="label">Total Budget</div><div class="value">$${(totalBudget / 1000).toFixed(0)}K</div></div>
+      <div class="kpi"><div class="label">Average ROI</div><div class="value">${avgROI}%</div></div>
+      <div class="kpi"><div class="label">Active Campaigns</div><div class="value">${activeCampaigns}</div></div>
+    </div>
+    <h3>Campaign Details</h3>
+    <table>
+      <thead><tr><th>Campaign</th><th>Platform</th><th>Budget</th><th>Revenue</th><th>ROI</th><th>Status</th></tr></thead>
+      <tbody>${campaigns.map(c => `<tr>
+        <td><strong>${c.name}</strong></td><td>${c.platform}</td>
+        <td>$${c.budget.toLocaleString()}</td><td>$${c.revenue.toLocaleString()}</td>
+        <td class="${c.ROI >= 200 ? 'positive' : ''}">${c.ROI}%</td>
+        <td><span class="status status-${c.status}">${c.status}</span></td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div class="footer">MarketPulse © ${new Date().getFullYear()} · ${role} Report · Confidential</div>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); w.print(); }
 }
 
 export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
@@ -53,15 +103,20 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       {/* Role Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center">
-          <RoleIcon className="w-7 h-7 text-primary-foreground" />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center">
+            <RoleIcon className="w-7 h-7 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="font-display text-3xl font-bold">{config.title}</h1>
+            <p className="text-muted-foreground">{config.subtitle}</p>
+            <p className="text-xs text-primary font-medium mt-1">Logged in as {userName} · {role}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-display text-3xl font-bold">{config.title}</h1>
-          <p className="text-muted-foreground">{config.subtitle}</p>
-          <p className="text-xs text-primary font-medium mt-1">Logged in as {userName} · {role}</p>
-        </div>
+        <Button variant="outline" size="sm" onClick={() => generateDashboardPDF(role, userName)}>
+          <Download className="w-4 h-4 mr-1" /> PDF Report
+        </Button>
       </div>
 
       {/* Admin Dashboard */}
@@ -109,7 +164,6 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               </ResponsiveContainer>
             </div>
           </div>
-          {/* Admin: All campaigns table */}
           <div className="bg-card border border-border rounded-xl p-6">
             <h3 className="font-display font-semibold mb-4">All Campaigns</h3>
             <div className="overflow-x-auto">

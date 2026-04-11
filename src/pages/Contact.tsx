@@ -7,7 +7,6 @@ const commonContact = {
 };
 
 const teamContacts = [
-  { name: 'Alex Morgan', role: 'CEO & Founder', email: 'alex.morgan@marketpulse.io', phone: '+1 (800) 555-0101' },
   { name: 'Sarah Johnson', role: 'Head of Product', email: 'sarah.johnson@marketpulse.io', phone: '+1 (800) 555-0102' },
   { name: 'Mike Chen', role: 'Lead Engineer', email: 'mike.chen@marketpulse.io', phone: '+1 (800) 555-0103' },
   { name: 'Emily Davis', role: 'Marketing Director', email: 'emily.davis@marketpulse.io', phone: '+1 (800) 555-0104' },
@@ -22,7 +21,6 @@ export default function Contact() {
         <p className="text-muted-foreground max-w-xl mx-auto text-lg">Get in touch with our team. We're here to help you succeed.</p>
       </div>
 
-      {/* Common Contact Info */}
       <div className="grid sm:grid-cols-3 gap-6 mb-12 max-w-3xl mx-auto">
         <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -47,10 +45,9 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Team Contacts */}
       <div className="max-w-4xl mx-auto">
         <h2 className="font-display text-2xl font-bold text-center mb-8">Team Directory</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {teamContacts.map(t => (
             <div key={t.name} className="bg-card border border-border rounded-xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <div className="flex items-center gap-3 mb-4">
@@ -65,7 +62,7 @@ export default function Contact() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="w-3.5 h-3.5" />
-                  <span>{t.email}</span>
+                  <span className="truncate">{t.email}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Phone className="w-3.5 h-3.5" />
