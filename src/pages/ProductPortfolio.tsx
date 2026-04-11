@@ -1,31 +1,29 @@
 import { products, campaigns, seasons } from '@/data/mockData';
-import { ShoppingBag, Sun, CloudRain, Snowflake, PartyPopper, TrendingUp, DollarSign, Target, Droplets, Shirt, Home, Gift, Cpu, Umbrella, Lamp } from 'lucide-react';
+import { Sun, CloudRain, Snowflake, PartyPopper, TrendingUp, DollarSign, Target, ShoppingBag } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts';
+
+import sunscreenImg from '@/assets/products/sunscreen-pro.jpg';
+import rainJacketImg from '@/assets/products/rain-jacket.jpg';
+import thermalMugImg from '@/assets/products/thermal-mug.jpg';
+import giftHamperImg from '@/assets/products/gift-hamper.jpg';
+import fitnessTrackerImg from '@/assets/products/fitness-tracker.jpg';
+import umbrellaImg from '@/assets/products/umbrella.jpg';
+import woolSweaterImg from '@/assets/products/wool-sweater.jpg';
+import partyLightsImg from '@/assets/products/party-lights.jpg';
 
 const seasonIcons: Record<string, React.ElementType> = {
   Summer: Sun, Rainy: CloudRain, Winter: Snowflake, Festival: PartyPopper,
 };
 
-const productIcons: Record<string, React.ElementType> = {
-  'Sunscreen Pro': Sun,
-  'Rain Jacket Elite': Droplets,
-  'Thermal Mug': Home,
-  'Gift Hamper Deluxe': Gift,
-  'Fitness Tracker X': Cpu,
-  'Umbrella Ultra': Umbrella,
-  'Wool Sweater': Shirt,
-  'Party Lights Set': Lamp,
-};
-
-const productColors: Record<string, string> = {
-  'Sunscreen Pro': '#F59E0B',
-  'Rain Jacket Elite': '#3B82F6',
-  'Thermal Mug': '#8B5CF6',
-  'Gift Hamper Deluxe': '#EC4899',
-  'Fitness Tracker X': '#10B981',
-  'Umbrella Ultra': '#06B6D4',
-  'Wool Sweater': '#6366F1',
-  'Party Lights Set': '#F97316',
+const productImages: Record<string, string> = {
+  'Sunscreen Pro': sunscreenImg,
+  'Rain Jacket Elite': rainJacketImg,
+  'Thermal Mug': thermalMugImg,
+  'Gift Hamper Deluxe': giftHamperImg,
+  'Fitness Tracker X': fitnessTrackerImg,
+  'Umbrella Ultra': umbrellaImg,
+  'Wool Sweater': woolSweaterImg,
+  'Party Lights Set': partyLightsImg,
 };
 
 export default function ProductPortfolio() {
@@ -102,21 +100,22 @@ export default function ProductPortfolio() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {productData.map((product, i) => {
           const SeasonIcon = seasonIcons[product.season_peak];
-          const ProductIcon = productIcons[product.name] || ShoppingBag;
-          const productColor = productColors[product.name] || '#7C3AED';
+          const imgSrc = productImages[product.name];
           return (
             <div key={product._id} className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-              {/* Product Image/Icon Header */}
-              <div className="h-32 flex items-center justify-center relative" style={{ backgroundColor: `${productColor}12` }}>
-                <div className="absolute inset-0 opacity-5" style={{ background: `radial-gradient(circle at 50% 50%, ${productColor}, transparent 70%)` }} />
-                <ProductIcon className="w-16 h-16" style={{ color: productColor }} />
+              <div className="h-40 overflow-hidden bg-muted">
+                {imgSrc ? (
+                  <img src={imgSrc} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ShoppingBag className="w-16 h-16 text-muted-foreground" />
+                  </div>
+                )}
               </div>
               <div className="p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div>
-                    <h3 className="font-display font-semibold">{product.name}</h3>
-                    <span className="text-xs text-muted-foreground">{product.category}</span>
-                  </div>
+                <div className="mb-4">
+                  <h3 className="font-display font-semibold">{product.name}</h3>
+                  <span className="text-xs text-muted-foreground">{product.category}</span>
                 </div>
                 <div className="space-y-2.5">
                   <div className="flex justify-between items-center text-sm">
