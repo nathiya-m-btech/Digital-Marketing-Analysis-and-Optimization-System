@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Shield, Camera, Check, ZoomIn, ZoomOut, RotateCcw, Bell, Globe, Lock, Palette } from 'lucide-react';
+import { User, Mail, Shield, Camera, Check, ZoomIn, ZoomOut, RotateCcw, Bell, Globe } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -107,7 +107,7 @@ export default function Profile() {
       <h1 className="font-display text-3xl font-bold mb-8">Settings</h1>
 
       {/* Profile Section */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-6">
+      <div className="bg-card border border-border rounded-xl p-6 mb-6 hover:shadow-md transition-shadow">
         <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2"><User className="w-5 h-5 text-primary" /> Profile</h2>
         <div className="flex items-center gap-6 mb-6">
           <div className="relative">
@@ -130,7 +130,7 @@ export default function Profile() {
         </div>
 
         {showEditor && (
-          <div className="mb-6 bg-muted/50 border border-border rounded-xl p-6 animate-slide-up">
+          <div className="mb-6 bg-muted/50 border border-border rounded-xl p-6 animate-scale-in">
             <p className="text-sm font-semibold mb-4">Resize & Position Photo</p>
             <div className="flex flex-col items-center gap-4">
               <div className="relative bg-muted rounded-full overflow-hidden" style={{ width: 200, height: 200 }}>
@@ -179,7 +179,7 @@ export default function Profile() {
       </div>
 
       {/* Preferences */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-6">
+      <div className="bg-card border border-border rounded-xl p-6 mb-6 hover:shadow-md transition-shadow">
         <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> Preferences</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
@@ -206,7 +206,7 @@ export default function Profile() {
       </div>
 
       {/* Notifications */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-6">
+      <div className="bg-card border border-border rounded-xl p-6 mb-6 hover:shadow-md transition-shadow">
         <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2"><Bell className="w-5 h-5 text-primary" /> Notifications</h2>
         <div className="space-y-3">
           {[

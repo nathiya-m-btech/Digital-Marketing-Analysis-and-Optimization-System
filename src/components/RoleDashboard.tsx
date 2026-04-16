@@ -5,7 +5,7 @@ import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, C
 import { Button } from '@/components/ui/button';
 import type { UserRole } from '@/types';
 
-const COLORS = ['#7C3AED', '#06B6D4', '#F59E0B', '#EF4444', '#10B981', '#3B82F6'];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--success))', 'hsl(var(--info))'];
 
 interface RoleDashboardProps {
   role: UserRole;
@@ -61,6 +61,18 @@ function generateDashboardPDF(role: UserRole, userName: string) {
   if (w) { w.document.write(html); w.document.close(); w.print(); }
 }
 
+function KPICard({ icon: Icon, label, value, color, delay }: { icon: React.ElementType; label: string; value: string; color: string; delay: number }) {
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-scale-in" style={{ animationDelay: `${delay}ms` }}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <Icon className={`w-5 h-5 ${color}`} />
+      </div>
+      <p className="text-2xl font-bold font-display">{value}</p>
+    </div>
+  );
+}
+
 export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
@@ -105,7 +117,7 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
       {/* Role Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center animate-scale-in">
             <RoleIcon className="w-7 h-7 text-primary-foreground" />
           </div>
           <div>
@@ -114,7 +126,7 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
             <p className="text-xs text-primary font-medium mt-1">Logged in as {userName} · {role}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => generateDashboardPDF(role, userName)}>
+        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors" onClick={() => generateDashboardPDF(role, userName)}>
           <Download className="w-4 h-4 mr-1" /> PDF Report
         </Button>
       </div>
@@ -127,32 +139,26 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               { icon: DollarSign, label: 'Revenue', value: `$${(totalRevenue / 1000).toFixed(0)}K`, color: 'text-success' },
               { icon: TrendingUp, label: 'Avg ROI', value: `${avgROI}%`, color: 'text-primary' },
               { icon: Target, label: 'Active', value: `${activeCampaigns}`, color: 'text-accent' },
-              { icon: Users, label: 'Users', value: '6 roles', color: 'text-info' },
+              { icon: Users, label: 'Users', value: '6 roles', color: 'text-primary' },
               { icon: Settings, label: 'System', value: 'Healthy', color: 'text-success' },
             ].map((kpi, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-4 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">{kpi.label}</span>
-                  <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
-                </div>
-                <p className="text-xl font-bold font-display">{kpi.value}</p>
-              </div>
+              <KPICard key={i} icon={kpi.icon} label={kpi.label} value={kpi.value} color={kpi.color} delay={i * 60} />
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">ROI by Platform</h3>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={roiByPlatform}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="platform" tick={{ fontSize: 11 }} />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                   <Bar dataKey="ROI" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Revenue Distribution</h3>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -164,7 +170,7 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="bg-card border border-border rounded-xl p-6">
+          <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
             <h3 className="font-display font-semibold mb-4">All Campaigns</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -177,8 +183,8 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
                   <th className="pb-2 text-muted-foreground font-medium">Status</th>
                 </tr></thead>
                 <tbody>
-                  {campaigns.map(c => (
-                    <tr key={c._id} className="border-b border-border/50">
+                  {campaigns.map((c, i) => (
+                    <tr key={c._id} className="border-b border-border/50 hover:bg-muted/30 transition-colors animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
                       <td className="py-2 font-medium">{c.name}</td>
                       <td className="py-2">{c.platform}</td>
                       <td className="py-2">${c.budget.toLocaleString()}</td>
@@ -204,37 +210,31 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               { icon: BarChart3, label: 'Budget Spent', value: `$${(totalBudget / 1000).toFixed(0)}K`, color: 'text-warning' },
               { icon: Target, label: 'Success Rate', value: `${avgSuccess}%`, color: 'text-accent' },
             ].map((kpi, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{kpi.label}</span>
-                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold font-display">{kpi.value}</p>
-              </div>
+              <KPICard key={i} icon={kpi.icon} label={kpi.label} value={kpi.value} color={kpi.color} delay={i * 80} />
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Strategic: Revenue by Platform</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={roiByPlatform}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="platform" tick={{ fontSize: 11 }} />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                   <Legend />
                   <Bar dataKey="revenue" name="Revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Seasonal Performance</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={seasonalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="season" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                   <Legend />
                   <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} />
                   <Line type="monotone" dataKey="budget" stroke="hsl(var(--accent))" strokeWidth={2} />
@@ -255,29 +255,23 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               { icon: DollarSign, label: 'Revenue', value: `$${(totalRevenue / 1000).toFixed(0)}K`, color: 'text-success' },
               { icon: BarChart3, label: 'Budget', value: `$${(totalBudget / 1000).toFixed(0)}K`, color: 'text-warning' },
             ].map((kpi, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{kpi.label}</span>
-                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold font-display">{kpi.value}</p>
-              </div>
+              <KPICard key={i} icon={kpi.icon} label={kpi.label} value={kpi.value} color={kpi.color} delay={i * 80} />
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Platform ROI</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={roiByPlatform}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="platform" tick={{ fontSize: 11 }} />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                   <Bar dataKey="ROI" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Revenue Share</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -289,11 +283,11 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="bg-card border border-border rounded-xl p-6">
-            <h3 className="font-display font-semibold mb-4">Campaign Management</h3>
+          <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
+            <h3 className="font-display font-semibold mb-4">Active Campaigns</h3>
             <div className="space-y-3">
-              {campaigns.filter(c => c.status === 'Active').map(c => (
-                <div key={c._id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              {campaigns.filter(c => c.status === 'Active').map((c, i) => (
+                <div key={c._id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <div>
                     <p className="font-medium">{c.name}</p>
                     <p className="text-xs text-muted-foreground">{c.platform} · {c.season}</p>
@@ -318,36 +312,30 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               { icon: TrendingUp, label: 'ROI', value: `${avgROI}%`, color: 'text-primary' },
               { icon: BarChart3, label: 'Total Investment', value: `$${(totalBudget / 1000).toFixed(0)}K`, color: 'text-warning' },
             ].map((kpi, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{kpi.label}</span>
-                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold font-display">{kpi.value}</p>
-              </div>
+              <KPICard key={i} icon={kpi.icon} label={kpi.label} value={kpi.value} color={kpi.color} delay={i * 80} />
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Revenue by Platform</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={roiByPlatform}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="platform" tick={{ fontSize: 11 }} />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                   <Bar dataKey="revenue" name="Revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Seasonal Revenue Trends</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={seasonalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="season" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                   <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -363,38 +351,32 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
             {[
               { icon: TrendingUp, label: 'Avg ROI', value: `${avgROI}%`, color: 'text-primary' },
               { icon: Target, label: 'Success Rate', value: `${avgSuccess}%`, color: 'text-accent' },
-              { icon: FileText, label: 'Surveys', value: `${surveys.length}`, color: 'text-info' },
+              { icon: FileText, label: 'Surveys', value: `${surveys.length}`, color: 'text-primary' },
               { icon: BarChart3, label: 'Campaigns', value: `${campaigns.length}`, color: 'text-warning' },
             ].map((kpi, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{kpi.label}</span>
-                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold font-display">{kpi.value}</p>
-              </div>
+              <KPICard key={i} icon={kpi.icon} label={kpi.label} value={kpi.value} color={kpi.color} delay={i * 80} />
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Campaign Analysis</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={roiByPlatform}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="platform" tick={{ fontSize: 11 }} />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                   <Legend />
                   <Bar dataKey="ROI" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                   <Bar dataKey="revenue" name="Revenue" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
               <h3 className="font-display font-semibold mb-4">Survey Insights</h3>
               <div className="space-y-3">
-                {surveys.map(s => (
-                  <div key={s._id} className="p-3 bg-muted/30 rounded-lg">
+                {surveys.map((s, i) => (
+                  <div key={s._id} className="p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-medium text-sm">{s.type}</span>
                       <span className="text-primary font-bold">⭐ {s.rating}</span>
@@ -420,20 +402,14 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               { icon: Target, label: 'Total Campaigns', value: `${campaigns.length}`, color: 'text-accent' },
               { icon: ClipboardList, label: 'Surveys Submitted', value: `${surveys.length}`, color: 'text-primary' },
             ].map((kpi, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{kpi.label}</span>
-                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold font-display">{kpi.value}</p>
-              </div>
+              <KPICard key={i} icon={kpi.icon} label={kpi.label} value={kpi.value} color={kpi.color} delay={i * 80} />
             ))}
           </div>
-          <div className="bg-card border border-border rounded-xl p-6 mb-6">
+          <div className="bg-card border border-border rounded-xl p-6 mb-6 hover:shadow-md transition-shadow">
             <h3 className="font-display font-semibold mb-4">Available Campaigns</h3>
             <div className="space-y-3">
-              {campaigns.map(c => (
-                <div key={c._id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              {campaigns.map((c, i) => (
+                <div key={c._id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
                   <div>
                     <p className="font-medium">{c.name}</p>
                     <p className="text-xs text-muted-foreground">{c.platform} · {c.season}</p>
@@ -443,11 +419,11 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
               ))}
             </div>
           </div>
-          <div className="bg-card border border-border rounded-xl p-6">
+          <div className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
             <h3 className="font-display font-semibold mb-4">Survey Responses</h3>
             <div className="space-y-3">
-              {surveys.map(s => (
-                <div key={s._id} className="p-3 bg-muted/30 rounded-lg flex justify-between items-center">
+              {surveys.map((s, i) => (
+                <div key={s._id} className="p-3 bg-muted/30 rounded-lg flex justify-between items-center hover:bg-muted/50 transition-colors animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <span className="font-medium text-sm">{s.type}</span>
                   <span className="text-primary font-bold">⭐ {s.rating}</span>
                 </div>

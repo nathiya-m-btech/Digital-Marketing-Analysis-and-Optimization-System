@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, User } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 const commonContact = {
   phone: '+1 (800) 555-0199',
@@ -11,6 +11,7 @@ const teamContacts = [
   { name: 'Mike Chen', role: 'Lead Engineer', email: 'mike.chen@marketpulse.io', phone: '+1 (800) 555-0103' },
   { name: 'Emily Davis', role: 'Marketing Director', email: 'emily.davis@marketpulse.io', phone: '+1 (800) 555-0104' },
   { name: 'James Wilson', role: 'Customer Success Lead', email: 'james.wilson@marketpulse.io', phone: '+1 (800) 555-0105' },
+  { name: 'Priya Sharma', role: 'Data Analytics Lead', email: 'priya.sharma@marketpulse.io', phone: '+1 (800) 555-0106' },
 ];
 
 export default function Contact() {
@@ -22,21 +23,21 @@ export default function Contact() {
       </div>
 
       <div className="grid sm:grid-cols-3 gap-6 mb-12 max-w-3xl mx-auto">
-        <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
+        <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Phone className="w-6 h-6 text-primary" />
           </div>
           <h3 className="font-display font-semibold mb-1">Phone</h3>
           <p className="text-sm text-muted-foreground">{commonContact.phone}</p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
+        <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Mail className="w-6 h-6 text-primary" />
           </div>
           <h3 className="font-display font-semibold mb-1">Email</h3>
           <p className="text-sm text-muted-foreground">{commonContact.email}</p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
+        <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <MapPin className="w-6 h-6 text-primary" />
           </div>
@@ -47,9 +48,9 @@ export default function Contact() {
 
       <div className="max-w-4xl mx-auto">
         <h2 className="font-display text-2xl font-bold text-center mb-8">Team Directory</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {teamContacts.map(t => (
-            <div key={t.name} className="bg-card border border-border rounded-xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {teamContacts.map((t, i) => (
+            <div key={t.name} className="bg-card border border-border rounded-xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
                   {t.name.charAt(0)}

@@ -1,19 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calculator, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpRight, Zap } from 'lucide-react';
 import { campaigns, platforms, products } from '@/data/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function ROISimulator() {
-  const [budget, setBudget] = useState(5000);
-  const [revenue, setRevenue] = useState(15000);
   const [roiIncrease, setRoiIncrease] = useState(10);
-
-  const roi = budget > 0 ? ((revenue - budget) / budget) * 100 : 0;
-  const profit = revenue - budget;
-  const isPositive = roi > 0;
 
   // Platform impact analysis
   const platformImpact = useMemo(() => {
@@ -50,47 +43,15 @@ export default function ROISimulator() {
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       <div className="text-center mb-10">
         <h1 className="font-display text-3xl font-bold mb-2">ROI Simulator</h1>
-        <p className="text-muted-foreground">Calculate ROI and see the impact of increasing it across platforms & products</p>
+        <p className="text-muted-foreground">See the impact of increasing ROI across platforms & products</p>
       </div>
 
-      {/* Basic Calculator */}
-      <div className="max-w-2xl mx-auto mb-10">
-        <div className="bg-card border border-border rounded-xl p-8 space-y-6">
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div>
-              <Label className="text-base">Budget ($)</Label>
-              <Input type="number" value={budget} onChange={e => setBudget(Number(e.target.value))} className="mt-2 text-lg" />
-              <input type="range" min={0} max={100000} step={500} value={budget} onChange={e => setBudget(Number(e.target.value))} className="w-full mt-2 accent-primary" />
-            </div>
-            <div>
-              <Label className="text-base">Revenue ($)</Label>
-              <Input type="number" value={revenue} onChange={e => setRevenue(Number(e.target.value))} className="mt-2 text-lg" />
-              <input type="range" min={0} max={200000} step={500} value={revenue} onChange={e => setRevenue(Number(e.target.value))} className="w-full mt-2 accent-primary" />
-            </div>
-          </div>
-          <div className="border-t border-border pt-6">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className={`rounded-xl p-5 text-center ${isPositive ? 'bg-success/10' : 'bg-destructive/10'}`}>
-                {isPositive ? <TrendingUp className="w-6 h-6 mx-auto mb-2 text-success" /> : <TrendingDown className="w-6 h-6 mx-auto mb-2 text-destructive" />}
-                <p className={`text-3xl font-bold font-display ${isPositive ? 'text-success' : 'text-destructive'}`}>{roi.toFixed(1)}%</p>
-                <p className="text-sm text-muted-foreground mt-1">ROI</p>
-              </div>
-              <div className="bg-muted rounded-xl p-5 text-center">
-                <Calculator className="w-6 h-6 mx-auto mb-2 text-primary" />
-                <p className="text-3xl font-bold font-display">${profit.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground mt-1">Net Profit</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ROI Increase Impact */}
+      {/* ROI Increase Slider */}
       <div className="mb-8">
         <div className="bg-card border border-border rounded-xl p-6 mb-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h2 className="font-display text-xl font-bold">What if ROI increases by...</h2>
+              <h2 className="font-display text-xl font-bold flex items-center gap-2"><Zap className="w-5 h-5 text-primary" /> What if ROI increases by...</h2>
               <p className="text-sm text-muted-foreground">See the projected impact across all platforms and products</p>
             </div>
             <div className="flex items-center gap-3">
@@ -100,18 +61,22 @@ export default function ROISimulator() {
           </div>
 
           {/* Overall Summary */}
-          <div className="grid sm:grid-cols-3 gap-4 mb-6">
-            <div className="bg-muted/50 rounded-xl p-4 text-center">
+          <div className="grid sm:grid-cols-4 gap-4 mb-6">
+            <div className="bg-muted/50 rounded-xl p-4 text-center animate-scale-in">
               <p className="text-sm text-muted-foreground">Current Avg ROI</p>
               <p className="text-2xl font-bold font-display">{overallCurrentROI}%</p>
             </div>
-            <div className="bg-success/10 rounded-xl p-4 text-center">
+            <div className="bg-success/10 rounded-xl p-4 text-center animate-scale-in" style={{ animationDelay: '80ms' }}>
               <p className="text-sm text-muted-foreground">Projected Avg ROI</p>
               <p className="text-2xl font-bold font-display text-success">{overallNewROI}%</p>
             </div>
-            <div className="bg-primary/10 rounded-xl p-4 text-center">
+            <div className="bg-primary/10 rounded-xl p-4 text-center animate-scale-in" style={{ animationDelay: '160ms' }}>
               <p className="text-sm text-muted-foreground">Revenue Gain</p>
               <p className="text-2xl font-bold font-display text-primary">+${((totalProjectedRevenue - totalCurrentRevenue) / 1000).toFixed(0)}K</p>
+            </div>
+            <div className="bg-accent/10 rounded-xl p-4 text-center animate-scale-in" style={{ animationDelay: '240ms' }}>
+              <p className="text-sm text-muted-foreground">Projected Revenue</p>
+              <p className="text-2xl font-bold font-display text-accent">${(totalProjectedRevenue / 1000).toFixed(0)}K</p>
             </div>
           </div>
 
@@ -129,15 +94,16 @@ export default function ROISimulator() {
         </div>
 
         {/* Platform Breakdown */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
           <div className="bg-card border border-border rounded-xl p-6">
             <h3 className="font-display font-semibold text-lg mb-4">Platform Impact (+{roiIncrease}% ROI)</h3>
             <div className="space-y-3">
-              {platformImpact.map(p => (
-                <div key={p.platform} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              {platformImpact.map((p, i) => (
+                <div key={p.platform} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <div>
                     <p className="font-medium text-sm">{p.platform}</p>
-                    <p className="text-xs text-muted-foreground">ROI: {p.currentROI}% → <span className="text-success">{p.newROI}%</span></p>
+                    <p className="text-xs text-muted-foreground">ROI: {p.currentROI}% → <span className="text-success font-semibold">{p.newROI}%</span></p>
+                    <p className="text-[10px] text-muted-foreground">+{p.newROI - p.currentROI}% increase</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-success flex items-center gap-1">
@@ -153,11 +119,12 @@ export default function ROISimulator() {
           <div className="bg-card border border-border rounded-xl p-6">
             <h3 className="font-display font-semibold text-lg mb-4">Product Impact (+{roiIncrease}% ROI)</h3>
             <div className="space-y-3">
-              {productImpact.map(p => (
-                <div key={p.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              {productImpact.map((p, i) => (
+                <div key={p.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <div>
                     <p className="font-medium text-sm">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">ROI: {p.currentROI}% → <span className="text-success">{p.newROI}%</span></p>
+                    <p className="text-xs text-muted-foreground">ROI: {p.currentROI}% → <span className="text-success font-semibold">{p.newROI}%</span></p>
+                    <p className="text-[10px] text-muted-foreground">+{p.newROI - p.currentROI}% increase</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-success flex items-center gap-1">
@@ -170,10 +137,37 @@ export default function ROISimulator() {
             </div>
           </div>
         </div>
+
+        {/* What happens section */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <h3 className="font-display font-semibold text-lg mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-success" /> What happens with +{roiIncrease}% ROI increase?
+          </h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-success/5 border border-success/20 rounded-xl p-4">
+              <p className="text-sm font-semibold text-success mb-2">📈 Revenue Growth</p>
+              <p className="text-xs text-muted-foreground">Total revenue grows from <strong>${(totalCurrentRevenue/1000).toFixed(0)}K</strong> to <strong className="text-success">${(totalProjectedRevenue/1000).toFixed(0)}K</strong> — an additional <strong className="text-success">${((totalProjectedRevenue - totalCurrentRevenue)/1000).toFixed(0)}K</strong>.</p>
+            </div>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+              <p className="text-sm font-semibold text-primary mb-2">🎯 Best Platform</p>
+              {(() => {
+                const best = [...platformImpact].sort((a, b) => b.gain - a.gain)[0];
+                return <p className="text-xs text-muted-foreground"><strong>{best.platform}</strong> gains the most: <strong className="text-primary">+${(best.gain/1000).toFixed(1)}K</strong> revenue with ROI jumping to <strong>{best.newROI}%</strong>.</p>;
+              })()}
+            </div>
+            <div className="bg-accent/5 border border-accent/20 rounded-xl p-4">
+              <p className="text-sm font-semibold text-accent mb-2">🏆 Top Product</p>
+              {(() => {
+                const best = [...productImpact].sort((a, b) => b.gain - a.gain)[0];
+                return <p className="text-xs text-muted-foreground"><strong>{best.name}</strong> benefits most: <strong className="text-accent">+${(best.gain/1000).toFixed(1)}K</strong> projected revenue gain.</p>;
+              })()}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-        <strong>Tip:</strong> An ROI above 100% means you've doubled your investment. Use the slider to explore how even a small ROI increase impacts revenue across all platforms and products.
+        <strong>Tip:</strong> Use the slider to explore how even a small ROI increase impacts revenue across all platforms and products. Focus on the platforms and products with the highest absolute gains for maximum impact.
       </div>
     </div>
   );
