@@ -29,12 +29,30 @@ export default function Campaigns() {
     );
   }, [platformFilter, seasonFilter, dateFrom, dateTo]);
 
-  const handleNew = () => {
-    if (!canCreate) {
-      toast({ title: 'Access Denied', description: `Your role (${user?.role}) cannot create campaigns. Contact an Admin or Marketing Manager.`, variant: 'destructive' });
+  const handleNew = async () => {
+    if (!canCreate || !user) {
+      toast({ title: 'Access Denied', description: `Your role (${user?.role || 'Guest'}) cannot create campaigns. Contact an Admin or Marketing Manager.`, variant: 'destructive' });
       return;
     }
-    toast({ title: 'New Campaign', description: 'Campaign creation form would open here.' });
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { error } = await supabase.from('campaigns').insert({
+        owner_id: user._id,
+        name: `New Campaign ${new Date().toLocaleDateString()}`,
+        platform: 'Instagram',
+        season: 'Summer',
+        status: 'Active',
+        budget: 1000,
+        revenue: 0,
+        roi: 0,
+        success_rate: 0,
+      });
+      if (error) throw error;
+      toast({ title: 'Campaign created', description: 'A new campaign was added to your database.' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: 'Create failed', description: msg, variant: 'destructive' });
+    }
   };
 
 
