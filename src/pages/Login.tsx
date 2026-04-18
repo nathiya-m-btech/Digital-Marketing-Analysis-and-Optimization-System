@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 import type { UserRole } from '@/types';
 
 const roles: UserRole[] = ['Admin', 'Marketing Manager', 'Business Owner', 'Freelancer', 'Digital Marketing Specialist', 'CMO'];
@@ -14,13 +16,37 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('Marketing Manager');
+  const [submitting, setSubmitting] = useState(false);
   const { login, signup } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = isSignup ? signup(name, email, password, role) : login(email, password);
-    if (success) navigate('/');
+    setSubmitting(true);
+    try {
+      if (isSignup) {
+        const result = await signup(name, email, password, role);
+        if (!result.success) {
+          toast({ title: 'Signup failed', description: result.error, variant: 'destructive' });
+          return;
+        }
+        toast({
+          title: 'Check your email',
+          description: 'We sent you a confirmation link. Please verify your email before signing in.',
+        });
+        setIsSignup(false);
+      } else {
+        const result = await login(email, password);
+        if (!result.success) {
+          toast({ title: 'Login failed', description: result.error, variant: 'destructive' });
+          return;
+        }
+        toast({ title: 'Welcome back!' });
+        navigate('/dashboard');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -44,7 +70,7 @@ export default function Login() {
           </div>
           <div>
             <Label>Password</Label>
-            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
           </div>
           {isSignup && (
             <div>
@@ -56,10 +82,11 @@ export default function Login() {
               >
                 {roles.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
-              <p className="text-xs text-muted-foreground mt-1">Your role determines your dashboard view</p>
+              <p className="text-xs text-muted-foreground mt-1">Your role determines your dashboard view & permissions</p>
             </div>
           )}
-          <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0">
+          <Button type="submit" disabled={submitting} className="w-full gradient-primary text-primary-foreground border-0">
+            {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {isSignup ? 'Create Account' : 'Sign In'}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
