@@ -132,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = useCallback(async (updates: Partial<User>) => {
     if (!user) return;
-    const dbUpdates: Record<string, unknown> = {};
+    const dbUpdates: { name?: string; email?: string; profile_image?: string } = {};
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.email !== undefined) dbUpdates.email = updates.email;
     if (updates.profile_image !== undefined) dbUpdates.profile_image = updates.profile_image;
