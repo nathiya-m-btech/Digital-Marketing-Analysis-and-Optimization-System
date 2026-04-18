@@ -1,11 +1,42 @@
-import { useMemo } from 'react';
-import { campaigns, platforms, seasons, products, surveys } from '@/data/mockData';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { campaigns as allCampaigns, platforms, seasons, products, surveys } from '@/data/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { UserRole } from '@/types';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--success))', 'hsl(var(--info))'];
+
+// Role-specific quick actions — defines what each role CAN do
+const ROLE_ACTIONS: Record<UserRole, { label: string; to: string; icon: React.ElementType; primary?: boolean }[]> = {
+  'Admin': [
+    { label: 'New Campaign', to: '/campaigns', icon: Plus, primary: true },
+    { label: 'Manage Users', to: '/profile', icon: Users },
+    { label: 'System Settings', to: '/profile', icon: Settings },
+  ],
+  'CMO': [
+    { label: 'Strategic Insights', to: '/seasonal-insights', icon: Eye, primary: true },
+    { label: 'Platform Analysis', to: '/platform-comparison', icon: BarChart3 },
+  ],
+  'Marketing Manager': [
+    { label: 'New Campaign', to: '/campaigns', icon: Plus, primary: true },
+    { label: 'View Analytics', to: '/platform-comparison', icon: BarChart3 },
+  ],
+  'Business Owner': [
+    { label: 'Revenue Report', to: '/campaigns', icon: DollarSign, primary: true },
+    { label: 'Platform Performance', to: '/platform-comparison', icon: TrendingUp },
+  ],
+  'Digital Marketing Specialist': [
+    { label: 'Analyze Campaigns', to: '/campaigns', icon: BarChart3, primary: true },
+    { label: 'Survey Data', to: '/surveys', icon: FileText },
+  ],
+  'Freelancer': [
+    { label: 'View Campaigns', to: '/campaigns', icon: Eye, primary: true },
+    { label: 'Submit Survey', to: '/surveys', icon: ClipboardList },
+  ],
+};
+
 
 interface RoleDashboardProps {
   role: UserRole;
