@@ -153,11 +153,12 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
 
   const config = roleConfig[role];
   const RoleIcon = config.icon;
+  const roleActions = ROLE_ACTIONS[role] || [];
 
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       {/* Role Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center animate-scale-in">
             <RoleIcon className="w-7 h-7 text-primary-foreground" />
@@ -168,10 +169,41 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
             <p className="text-xs text-primary font-medium mt-1">Logged in as {userName} · {role}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors" onClick={() => generateDashboardPDF(role, userName)}>
+        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors self-start" onClick={() => generateDashboardPDF(role, userName, campaigns)}>
           <Download className="w-4 h-4 mr-1" /> PDF Report
         </Button>
       </div>
+
+      {/* Date Range Filter + Role Actions */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 p-4 bg-card border border-border rounded-xl animate-slide-up">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+            <Filter className="w-4 h-4" /> Filter:
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">From</label>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">To</label>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm" />
+          </div>
+          {(dateFrom || dateTo) && (
+            <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>Clear</Button>
+          )}
+          <span className="text-xs text-muted-foreground self-center">{campaigns.length} campaigns</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {roleActions.map((a, i) => (
+            <Link key={i} to={a.to}>
+              <Button size="sm" variant={a.primary ? 'default' : 'outline'} className={a.primary ? 'gradient-primary text-primary-foreground border-0' : ''}>
+                <a.icon className="w-4 h-4 mr-1" /> {a.label}
+              </Button>
+            </Link>
+          ))}
+        </div>
+      </div>
+
 
       {/* Admin Dashboard */}
       {role === 'Admin' && (
