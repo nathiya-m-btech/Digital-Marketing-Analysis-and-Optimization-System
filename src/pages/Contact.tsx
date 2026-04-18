@@ -1,17 +1,16 @@
 import { Mail, Phone, MapPin } from 'lucide-react';
 
 const commonContact = {
-  phone: '+1 (800) 555-0199',
-  email: 'support@marketpulse.io',
-  address: '123 Marketing Ave, San Francisco, CA 94102',
+  phone: '+91 8428625309',
+  email: 'support@marketpulse.in',
+  address: '123 Marketing Avenue, Chennai, Tamil Nadu 600001',
 };
 
 const teamContacts = [
-  { name: 'Sarah Johnson', role: 'Head of Product', email: 'sarah.johnson@marketpulse.io', phone: '+1 (800) 555-0102' },
-  { name: 'Mike Chen', role: 'Lead Engineer', email: 'mike.chen@marketpulse.io', phone: '+1 (800) 555-0103' },
-  { name: 'Emily Davis', role: 'Marketing Director', email: 'emily.davis@marketpulse.io', phone: '+1 (800) 555-0104' },
-  { name: 'James Wilson', role: 'Customer Success Lead', email: 'james.wilson@marketpulse.io', phone: '+1 (800) 555-0105' },
-  { name: 'Priya Sharma', role: 'Data Analytics Lead', email: 'priya.sharma@marketpulse.io', phone: '+1 (800) 555-0106' },
+  { name: 'Nathiya Marutharaj', role: 'CEO & Founder', email: 'nathiya.m@marketpulse.in', phone: '+91 8428625309' },
+  { name: 'Navethasri RM', role: 'Head of Product', email: 'navethasri.rm@gmail.com', phone: '+91 9642578130' },
+  { name: 'Roshanbegum J', role: 'Lead Engineer', email: 'roshanbegum.j@gmail.com', phone: '+91 9451267830' },
+  { name: 'Monisha D', role: 'Marketing Director', email: 'monisha.d@gmail.com', phone: '+91 8635479201' },
 ];
 
 export default function Contact() {
@@ -48,7 +47,7 @@ export default function Contact() {
 
       <div className="max-w-4xl mx-auto">
         <h2 className="font-display text-2xl font-bold text-center mb-8">Team Directory</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 gap-5">
           {teamContacts.map((t, i) => (
             <div key={t.name} className="bg-card border border-border rounded-xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="flex items-center gap-3 mb-4">

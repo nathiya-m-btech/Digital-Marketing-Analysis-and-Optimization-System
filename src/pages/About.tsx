@@ -1,10 +1,10 @@
 import { BarChart3, Users, Shield, Sun, CloudRain, Snowflake, PartyPopper } from 'lucide-react';
 
 const team = [
-  { name: 'Alex Morgan', role: 'CEO & Founder' },
-  { name: 'Sarah Johnson', role: 'Head of Product' },
-  { name: 'Mike Chen', role: 'Lead Engineer' },
-  { name: 'Emily Davis', role: 'Marketing Director' },
+  { name: 'Nathiya Marutharaj', role: 'CEO & Founder' },
+  { name: 'Navethasri RM', role: 'Head of Product' },
+  { name: 'Roshanbegum J', role: 'Lead Engineer' },
+  { name: 'Monisha D', role: 'Marketing Director' },
 ];
 
 const seasonPlatforms = [
