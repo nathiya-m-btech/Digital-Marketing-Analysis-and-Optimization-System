@@ -93,13 +93,34 @@ export default function Profile() {
     setRawImage(null);
   };
 
-  const handleSave = () => {
-    updateProfile({
-      name: name || user.name,
-      email: email || user.email,
-      profile_image: previewImage,
-    });
-    toast({ title: 'Settings saved', description: 'All your changes have been saved successfully.' });
+  const handleSave = async () => {
+    try {
+      let uploadedUrl: string | undefined = previewImage;
+
+      // If preview is a data URL (newly cropped), upload it to storage
+      if (previewImage && previewImage.startsWith('data:')) {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const blob = await (await fetch(previewImage)).blob();
+        const filePath = `${user._id}/avatar-${Date.now()}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        uploadedUrl = publicUrl;
+      }
+
+      await updateProfile({
+        name: name || user.name,
+        email: email || user.email,
+        profile_image: uploadedUrl,
+      });
+      if (uploadedUrl) setPreviewImage(uploadedUrl);
+      toast({ title: 'Settings saved', description: 'All your changes have been saved successfully.' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: 'Save failed', description: msg, variant: 'destructive' });
+    }
   };
 
   return (
