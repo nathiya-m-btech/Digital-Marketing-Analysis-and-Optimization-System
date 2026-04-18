@@ -1,21 +1,52 @@
-import { useMemo } from 'react';
-import { campaigns, platforms, seasons, products, surveys } from '@/data/mockData';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { campaigns as allCampaigns, platforms, seasons, products, surveys } from '@/data/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { UserRole } from '@/types';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--success))', 'hsl(var(--info))'];
+
+// Role-specific quick actions — defines what each role CAN do
+const ROLE_ACTIONS: Record<UserRole, { label: string; to: string; icon: React.ElementType; primary?: boolean }[]> = {
+  'Admin': [
+    { label: 'New Campaign', to: '/campaigns', icon: Plus, primary: true },
+    { label: 'Manage Users', to: '/profile', icon: Users },
+    { label: 'System Settings', to: '/profile', icon: Settings },
+  ],
+  'CMO': [
+    { label: 'Strategic Insights', to: '/seasonal-insights', icon: Eye, primary: true },
+    { label: 'Platform Analysis', to: '/platform-comparison', icon: BarChart3 },
+  ],
+  'Marketing Manager': [
+    { label: 'New Campaign', to: '/campaigns', icon: Plus, primary: true },
+    { label: 'View Analytics', to: '/platform-comparison', icon: BarChart3 },
+  ],
+  'Business Owner': [
+    { label: 'Revenue Report', to: '/campaigns', icon: DollarSign, primary: true },
+    { label: 'Platform Performance', to: '/platform-comparison', icon: TrendingUp },
+  ],
+  'Digital Marketing Specialist': [
+    { label: 'Analyze Campaigns', to: '/campaigns', icon: BarChart3, primary: true },
+    { label: 'Survey Data', to: '/surveys', icon: FileText },
+  ],
+  'Freelancer': [
+    { label: 'View Campaigns', to: '/campaigns', icon: Eye, primary: true },
+    { label: 'Submit Survey', to: '/surveys', icon: ClipboardList },
+  ],
+};
+
 
 interface RoleDashboardProps {
   role: UserRole;
   userName: string;
 }
 
-function generateDashboardPDF(role: UserRole, userName: string) {
+function generateDashboardPDF(role: UserRole, userName: string, campaigns: typeof allCampaigns) {
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
-  const avgROI = Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length);
+  const avgROI = campaigns.length ? Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length) : 0;
   const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
 
   const html = `<html><head><title>${role} Dashboard Report</title>
@@ -74,11 +105,22 @@ function KPICard({ icon: Icon, label, value, color, delay }: { icon: React.Eleme
 }
 
 export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const campaigns = useMemo(
+    () => allCampaigns.filter(c =>
+      (!dateFrom || c.created_at >= dateFrom) &&
+      (!dateTo || c.created_at <= dateTo)
+    ),
+    [dateFrom, dateTo]
+  );
+
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
-  const avgROI = Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length);
+  const avgROI = campaigns.length ? Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length) : 0;
   const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
-  const avgSuccess = Math.round(campaigns.reduce((s, c) => s + c.success_rate, 0) / campaigns.length);
+  const avgSuccess = campaigns.length ? Math.round(campaigns.reduce((s, c) => s + c.success_rate, 0) / campaigns.length) : 0;
 
   const roiByPlatform = platforms.map(p => {
     const pc = campaigns.filter(c => c.platform === p);
@@ -111,11 +153,12 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
 
   const config = roleConfig[role];
   const RoleIcon = config.icon;
+  const roleActions = ROLE_ACTIONS[role] || [];
 
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       {/* Role Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center animate-scale-in">
             <RoleIcon className="w-7 h-7 text-primary-foreground" />
@@ -126,10 +169,41 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
             <p className="text-xs text-primary font-medium mt-1">Logged in as {userName} · {role}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors" onClick={() => generateDashboardPDF(role, userName)}>
+        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors self-start" onClick={() => generateDashboardPDF(role, userName, campaigns)}>
           <Download className="w-4 h-4 mr-1" /> PDF Report
         </Button>
       </div>
+
+      {/* Date Range Filter + Role Actions */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 p-4 bg-card border border-border rounded-xl animate-slide-up">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+            <Filter className="w-4 h-4" /> Filter:
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">From</label>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">To</label>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm" />
+          </div>
+          {(dateFrom || dateTo) && (
+            <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>Clear</Button>
+          )}
+          <span className="text-xs text-muted-foreground self-center">{campaigns.length} campaigns</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {roleActions.map((a, i) => (
+            <Link key={i} to={a.to}>
+              <Button size="sm" variant={a.primary ? 'default' : 'outline'} className={a.primary ? 'gradient-primary text-primary-foreground border-0' : ''}>
+                <a.icon className="w-4 h-4 mr-1" /> {a.label}
+              </Button>
+            </Link>
+          ))}
+        </div>
+      </div>
+
 
       {/* Admin Dashboard */}
       {role === 'Admin' && (

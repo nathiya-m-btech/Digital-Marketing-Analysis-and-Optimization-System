@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { campaigns, platforms, seasons, products } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, FileText } from 'lucide-react';
+import { Plus, Download, FileText, Lock } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const statusColors: Record<string, string> = {
   Active: 'bg-success/10 text-success',
@@ -11,16 +12,31 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Campaigns() {
-  const { canEdit } = useAuth();
+  const { hasPermission, user } = useAuth();
+  const canCreate = hasPermission('campaign.create');
+  const canExport = hasPermission('analytics.export') || !user; // demo allowed for guests
   const [platformFilter, setPlatformFilter] = useState('All');
   const [seasonFilter, setSeasonFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const filtered = useMemo(() => {
     return campaigns.filter(c =>
       (platformFilter === 'All' || c.platform === platformFilter) &&
-      (seasonFilter === 'All' || c.season === seasonFilter)
+      (seasonFilter === 'All' || c.season === seasonFilter) &&
+      (!dateFrom || c.created_at >= dateFrom) &&
+      (!dateTo || c.created_at <= dateTo)
     );
-  }, [platformFilter, seasonFilter]);
+  }, [platformFilter, seasonFilter, dateFrom, dateTo]);
+
+  const handleNew = () => {
+    if (!canCreate) {
+      toast({ title: 'Access Denied', description: `Your role (${user?.role}) cannot create campaigns. Contact an Admin or Marketing Manager.`, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'New Campaign', description: 'Campaign creation form would open here.' });
+  };
+
 
   const downloadCSV = () => {
     const headers = 'Name,Platform,Budget,Revenue,ROI,Success Rate,Season,Status\n';
@@ -93,7 +109,15 @@ export default function Campaigns() {
           <h1 className="font-display text-3xl font-bold">Campaigns</h1>
           <p className="text-muted-foreground">{filtered.length} campaigns found</p>
         </div>
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-end">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">From</label>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">To</label>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+          </div>
           <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm">
             <option value="All">All Platforms</option>
             {platforms.map(p => <option key={p} value={p}>{p}</option>)}
@@ -104,8 +128,21 @@ export default function Campaigns() {
           </select>
           <Button variant="outline" size="sm" onClick={downloadCSV}><Download className="w-4 h-4 mr-1" /> CSV</Button>
           <Button variant="outline" size="sm" onClick={downloadPDF}><FileText className="w-4 h-4 mr-1" /> PDF</Button>
-          {canEdit && <Button size="sm" className="gradient-primary text-primary-foreground border-0"><Plus className="w-4 h-4 mr-1" /> New</Button>}
+          {user && (
+            <Button
+              size="sm"
+              onClick={handleNew}
+              disabled={!canCreate}
+              className={canCreate ? "gradient-primary text-primary-foreground border-0" : ""}
+              variant={canCreate ? 'default' : 'outline'}
+              title={canCreate ? 'Create new campaign' : `${user.role} cannot create campaigns`}
+            >
+              {canCreate ? <Plus className="w-4 h-4 mr-1" /> : <Lock className="w-4 h-4 mr-1" />}
+              New
+            </Button>
+          )}
         </div>
+
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
