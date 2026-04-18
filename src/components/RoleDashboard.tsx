@@ -43,10 +43,10 @@ interface RoleDashboardProps {
   userName: string;
 }
 
-function generateDashboardPDF(role: UserRole, userName: string) {
+function generateDashboardPDF(role: UserRole, userName: string, campaigns: typeof allCampaigns) {
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
-  const avgROI = Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length);
+  const avgROI = campaigns.length ? Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length) : 0;
   const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
 
   const html = `<html><head><title>${role} Dashboard Report</title>
