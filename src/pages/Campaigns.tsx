@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { campaigns, platforms, seasons, products } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, FileText } from 'lucide-react';
+import { Plus, Download, FileText, Lock } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const statusColors: Record<string, string> = {
   Active: 'bg-success/10 text-success',
@@ -11,16 +12,31 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Campaigns() {
-  const { canEdit } = useAuth();
+  const { hasPermission, user } = useAuth();
+  const canCreate = hasPermission('campaign.create');
+  const canExport = hasPermission('analytics.export') || !user; // demo allowed for guests
   const [platformFilter, setPlatformFilter] = useState('All');
   const [seasonFilter, setSeasonFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const filtered = useMemo(() => {
     return campaigns.filter(c =>
       (platformFilter === 'All' || c.platform === platformFilter) &&
-      (seasonFilter === 'All' || c.season === seasonFilter)
+      (seasonFilter === 'All' || c.season === seasonFilter) &&
+      (!dateFrom || c.created_at >= dateFrom) &&
+      (!dateTo || c.created_at <= dateTo)
     );
-  }, [platformFilter, seasonFilter]);
+  }, [platformFilter, seasonFilter, dateFrom, dateTo]);
+
+  const handleNew = () => {
+    if (!canCreate) {
+      toast({ title: 'Access Denied', description: `Your role (${user?.role}) cannot create campaigns. Contact an Admin or Marketing Manager.`, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'New Campaign', description: 'Campaign creation form would open here.' });
+  };
+
 
   const downloadCSV = () => {
     const headers = 'Name,Platform,Budget,Revenue,ROI,Success Rate,Season,Status\n';
