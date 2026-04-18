@@ -105,11 +105,22 @@ function KPICard({ icon: Icon, label, value, color, delay }: { icon: React.Eleme
 }
 
 export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const campaigns = useMemo(
+    () => allCampaigns.filter(c =>
+      (!dateFrom || c.created_at >= dateFrom) &&
+      (!dateTo || c.created_at <= dateTo)
+    ),
+    [dateFrom, dateTo]
+  );
+
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
-  const avgROI = Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length);
+  const avgROI = campaigns.length ? Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length) : 0;
   const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
-  const avgSuccess = Math.round(campaigns.reduce((s, c) => s + c.success_rate, 0) / campaigns.length);
+  const avgSuccess = campaigns.length ? Math.round(campaigns.reduce((s, c) => s + c.success_rate, 0) / campaigns.length) : 0;
 
   const roiByPlatform = platforms.map(p => {
     const pc = campaigns.filter(c => c.platform === p);
