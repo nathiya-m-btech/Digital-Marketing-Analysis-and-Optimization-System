@@ -17,6 +17,7 @@ import About from "./pages/About";
 import SeasonalInsights from "./pages/SeasonalInsights";
 import ProductPortfolio from "./pages/ProductPortfolio";
 import Contact from "./pages/Contact";
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/users" element={<Users />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
