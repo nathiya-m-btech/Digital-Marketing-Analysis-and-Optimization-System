@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react';
-import { campaigns, platforms, seasons, products } from '@/data/mockData';
+import { platforms, seasons } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserCampaigns } from '@/hooks/useUserCampaigns';
+import CampaignUploader from '@/components/CampaignUploader';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, FileText, Lock } from 'lucide-react';
+import { Plus, Download, FileText, Lock, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusColors: Record<string, string> = {
   Active: 'bg-success/10 text-success',
@@ -14,7 +17,7 @@ const statusColors: Record<string, string> = {
 export default function Campaigns() {
   const { hasPermission, user } = useAuth();
   const canCreate = hasPermission('campaign.create');
-  const canExport = hasPermission('analytics.export') || !user; // demo allowed for guests
+  const { campaigns, loading, refetch } = useUserCampaigns(true);
   const [platformFilter, setPlatformFilter] = useState('All');
   const [seasonFilter, setSeasonFilter] = useState('All');
   const [dateFrom, setDateFrom] = useState('');
@@ -27,7 +30,7 @@ export default function Campaigns() {
       (!dateFrom || c.created_at >= dateFrom) &&
       (!dateTo || c.created_at <= dateTo)
     );
-  }, [platformFilter, seasonFilter, dateFrom, dateTo]);
+  }, [campaigns, platformFilter, seasonFilter, dateFrom, dateTo]);
 
   const handleNew = async () => {
     if (!canCreate || !user) {
@@ -35,7 +38,6 @@ export default function Campaigns() {
       return;
     }
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase.from('campaigns').insert({
         owner_id: user._id,
         name: `New Campaign ${new Date().toLocaleDateString()}`,
@@ -46,15 +48,16 @@ export default function Campaigns() {
         revenue: 0,
         roi: 0,
         success_rate: 0,
+        is_demo: false,
       });
       if (error) throw error;
       toast({ title: 'Campaign created', description: 'A new campaign was added to your database.' });
+      refetch();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       toast({ title: 'Create failed', description: msg, variant: 'destructive' });
     }
   };
-
 
   const downloadCSV = () => {
     const headers = 'Name,Platform,Budget,Revenue,ROI,Success Rate,Season,Status\n';
@@ -67,54 +70,20 @@ export default function Campaigns() {
   };
 
   const downloadPDF = () => {
-    const html = `
-      <html>
-      <head>
-        <title>MarketPulse Campaign Report</title>
-        <style>
-          body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1a1a1a; }
-          h1 { color: #6366f1; font-size: 28px; margin-bottom: 4px; }
-          .subtitle { color: #888; font-size: 14px; margin-bottom: 30px; }
-          table { width: 100%; border-collapse: collapse; font-size: 13px; }
-          th { background: #f3f4f6; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e5e7eb; font-weight: 600; }
-          td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; }
-          tr:hover { background: #fafafa; }
-          .positive { color: #22c55e; font-weight: 600; }
-          .status { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-          .status-Active { background: #dcfce7; color: #16a34a; }
-          .status-Paused { background: #fef3c7; color: #d97706; }
-          .status-Completed { background: #f3f4f6; color: #6b7280; }
-          .summary { display: flex; gap: 24px; margin-bottom: 30px; }
-          .summary-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 24px; }
-          .summary-card .label { font-size: 12px; color: #888; }
-          .summary-card .value { font-size: 24px; font-weight: 700; }
-          .footer { margin-top: 40px; text-align: center; color: #aaa; font-size: 11px; }
-        </style>
-      </head>
-      <body>
-        <h1>📊 MarketPulse Campaign Report</h1>
-        <p class="subtitle">Generated on ${new Date().toLocaleDateString()} • ${filtered.length} campaigns</p>
-        <div class="summary">
-          <div class="summary-card"><div class="label">Total Budget</div><div class="value">$${filtered.reduce((s, c) => s + c.budget, 0).toLocaleString()}</div></div>
-          <div class="summary-card"><div class="label">Total Revenue</div><div class="value">$${filtered.reduce((s, c) => s + c.revenue, 0).toLocaleString()}</div></div>
-          <div class="summary-card"><div class="label">Avg ROI</div><div class="value">${Math.round(filtered.reduce((s, c) => s + c.ROI, 0) / filtered.length)}%</div></div>
-        </div>
-        <table>
-          <thead><tr><th>Campaign</th><th>Platform</th><th>Budget</th><th>Revenue</th><th>ROI</th><th>Success</th><th>Season</th><th>Status</th></tr></thead>
-          <tbody>
-            ${filtered.map(c => `<tr>
-              <td><strong>${c.name}</strong></td>
-              <td>${c.platform}</td>
-              <td>$${c.budget.toLocaleString()}</td>
-              <td>$${c.revenue.toLocaleString()}</td>
-              <td class="${c.ROI >= 200 ? 'positive' : ''}">${c.ROI}%</td>
-              <td>${c.success_rate}%</td>
-              <td>${c.season}</td>
-              <td><span class="status status-${c.status}">${c.status}</span></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-        <div class="footer">MarketPulse © ${new Date().getFullYear()} • Confidential</div>
+    const total = filtered.length || 1;
+    const html = `<html><head><title>MarketPulse Campaign Report</title>
+      <style>body{font-family:'Segoe UI',sans-serif;padding:40px;color:#1a1a1a}h1{color:#6366f1;font-size:28px;margin-bottom:4px}.subtitle{color:#888;font-size:14px;margin-bottom:30px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;padding:10px 12px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:600}td{padding:10px 12px;border-bottom:1px solid #e5e7eb}.positive{color:#22c55e;font-weight:600}.status{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}.status-Active{background:#dcfce7;color:#16a34a}.status-Paused{background:#fef3c7;color:#d97706}.status-Completed{background:#f3f4f6;color:#6b7280}.summary{display:flex;gap:24px;margin-bottom:30px}.summary-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px 24px}.summary-card .label{font-size:12px;color:#888}.summary-card .value{font-size:24px;font-weight:700}.footer{margin-top:40px;text-align:center;color:#aaa;font-size:11px}</style>
+      </head><body>
+      <h1>📊 MarketPulse Campaign Report</h1>
+      <p class="subtitle">Generated on ${new Date().toLocaleDateString()} • ${filtered.length} campaigns</p>
+      <div class="summary">
+        <div class="summary-card"><div class="label">Total Budget</div><div class="value">$${filtered.reduce((s, c) => s + c.budget, 0).toLocaleString()}</div></div>
+        <div class="summary-card"><div class="label">Total Revenue</div><div class="value">$${filtered.reduce((s, c) => s + c.revenue, 0).toLocaleString()}</div></div>
+        <div class="summary-card"><div class="label">Avg ROI</div><div class="value">${Math.round(filtered.reduce((s, c) => s + c.ROI, 0) / total)}%</div></div>
+      </div>
+      <table><thead><tr><th>Campaign</th><th>Platform</th><th>Budget</th><th>Revenue</th><th>ROI</th><th>Season</th><th>Status</th></tr></thead>
+      <tbody>${filtered.map(c => `<tr><td><strong>${c.name}</strong></td><td>${c.platform}</td><td>$${c.budget.toLocaleString()}</td><td>$${c.revenue.toLocaleString()}</td><td class="${c.ROI >= 200 ? 'positive' : ''}">${c.ROI}%</td><td>${c.season}</td><td><span class="status status-${c.status}">${c.status}</span></td></tr>`).join('')}</tbody></table>
+      <div class="footer">MarketPulse © ${new Date().getFullYear()} • Confidential</div>
       </body></html>`;
     const w = window.open('', '_blank');
     if (w) { w.document.write(html); w.document.close(); w.print(); }
@@ -122,7 +91,7 @@ export default function Campaigns() {
 
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold">Campaigns</h1>
           <p className="text-muted-foreground">{filtered.length} campaigns found</p>
@@ -160,31 +129,37 @@ export default function Campaigns() {
             </Button>
           )}
         </div>
-
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left p-4 font-medium text-muted-foreground">Campaign</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Platform</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Budget</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Revenue</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">ROI</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Season</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(c => {
-                const product = products.find(p => p._id === c.product_id);
-                return (
+      {user && (
+        <div className="mb-6">
+          <CampaignUploader onUploaded={refetch} />
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      ) : (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left p-4 font-medium text-muted-foreground">Campaign</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Platform</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Budget</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Revenue</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">ROI</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Season</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(c => (
                   <tr key={c._id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="p-4">
                       <p className="font-medium">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">{product?.name}</p>
+                      {c.product_id && <p className="text-xs text-muted-foreground">{c.product_id}</p>}
                     </td>
                     <td className="p-4">{c.platform}</td>
                     <td className="p-4">${c.budget.toLocaleString()}</td>
@@ -197,12 +172,15 @@ export default function Campaigns() {
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[c.status]}`}>{c.status}</span>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">No campaigns yet. Upload a dataset to get started.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

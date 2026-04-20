@@ -35,7 +35,11 @@ export default function Header() {
   };
 
   const navItems = isAuthenticated
-    ? [...publicNavItems, { path: '/profile', label: 'Settings' }]
+    ? [
+        ...publicNavItems,
+        ...(user?.role === 'Admin' ? [{ path: '/users', label: 'Users' }] : []),
+        { path: '/profile', label: 'Settings' },
+      ]
     : publicNavItems;
 
   return (
