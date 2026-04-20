@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { campaigns as allCampaigns, platforms, seasons, products, surveys } from '@/data/mockData';
+import { platforms, seasons, surveys } from '@/data/mockData';
+import { useUserCampaigns } from '@/hooks/useUserCampaigns';
+import CampaignUploader from '@/components/CampaignUploader';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter } from 'lucide-react';
+import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { UserRole } from '@/types';
+import type { Campaign, UserRole } from '@/types';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--success))', 'hsl(var(--info))'];
 
@@ -43,7 +45,7 @@ interface RoleDashboardProps {
   userName: string;
 }
 
-function generateDashboardPDF(role: UserRole, userName: string, campaigns: typeof allCampaigns) {
+function generateDashboardPDF(role: UserRole, userName: string, campaigns: Campaign[]) {
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
   const avgROI = campaigns.length ? Math.round(campaigns.reduce((s, c) => s + c.ROI, 0) / campaigns.length) : 0;
@@ -107,14 +109,18 @@ function KPICard({ icon: Icon, label, value, color, delay }: { icon: React.Eleme
 export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  // Per-user data: own uploads if any, else demo seed
+  const { campaigns: dbCampaigns, loading, refetch } = useUserCampaigns(true);
 
   const campaigns = useMemo(
-    () => allCampaigns.filter(c =>
+    () => dbCampaigns.filter(c =>
       (!dateFrom || c.created_at >= dateFrom) &&
       (!dateTo || c.created_at <= dateTo)
     ),
-    [dateFrom, dateTo]
+    [dbCampaigns, dateFrom, dateTo]
   );
+
+  const hasOwnData = dbCampaigns.some(c => !c.is_demo);
 
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
