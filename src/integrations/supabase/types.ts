@@ -19,6 +19,7 @@ export type Database = {
           budget: number
           created_at: string
           id: string
+          is_demo: boolean
           name: string
           owner_id: string
           platform: string
@@ -34,6 +35,7 @@ export type Database = {
           budget?: number
           created_at?: string
           id?: string
+          is_demo?: boolean
           name: string
           owner_id: string
           platform: string
@@ -49,6 +51,7 @@ export type Database = {
           budget?: number
           created_at?: string
           id?: string
+          is_demo?: boolean
           name?: string
           owner_id?: string
           platform?: string
