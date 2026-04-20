@@ -21,7 +21,7 @@ export type Database = {
           id: string
           is_demo: boolean
           name: string
-          owner_id: string
+          owner_id: string | null
           platform: string
           product_name: string | null
           revenue: number
@@ -37,7 +37,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           name: string
-          owner_id: string
+          owner_id?: string | null
           platform: string
           product_name?: string | null
           revenue?: number
@@ -53,7 +53,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           name?: string
-          owner_id?: string
+          owner_id?: string | null
           platform?: string
           product_name?: string | null
           revenue?: number
