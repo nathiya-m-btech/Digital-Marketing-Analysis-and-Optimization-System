@@ -210,6 +210,23 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
         </div>
       </div>
 
+      {/* Per-user upload + data source banner */}
+      <div className="mb-6 space-y-3">
+        <CampaignUploader onUploaded={refetch} />
+        {!loading && (
+          <p className="text-xs text-muted-foreground">
+            {hasOwnData
+              ? `📊 Showing your uploaded data (${campaigns.length} campaigns)`
+              : `🎯 Showing demo data — upload your marketing report to personalize this dashboard`}
+          </p>
+        )}
+      </div>
+
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* Admin Dashboard */}
       {role === 'Admin' && (
