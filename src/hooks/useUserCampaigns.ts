@@ -22,7 +22,7 @@ interface DbCampaign {
 function toCampaign(row: DbCampaign): Campaign & { is_demo?: boolean } {
   return {
     _id: row.id,
-    user_id: row.owner_id,
+    user_id: row.owner_id ?? '',
     name: row.name,
     platform: row.platform as Platform,
     season: row.season as Season,
