@@ -5,7 +5,7 @@ import type { Campaign, Platform, Season } from '@/types';
 
 interface DbCampaign {
   id: string;
-  owner_id: string;
+  owner_id: string | null;
   name: string;
   platform: string;
   season: string;
