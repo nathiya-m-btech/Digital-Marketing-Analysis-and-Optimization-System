@@ -511,7 +511,7 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {Object.entries(s.answers).map(([k, v]) => (
-                        <span key={k} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{k}: {v}</span>
+                        <span key={k} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{k}: {String(v)}</span>
                       ))}
                     </div>
                   </div>
