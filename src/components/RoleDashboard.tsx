@@ -560,6 +560,23 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
           </div>
         </>
       )}
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset all your campaign data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes every campaign you've uploaded. Demo data will reappear until you upload again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={resetMyData} disabled={resetting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {resetting ? 'Resetting…' : 'Reset'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
