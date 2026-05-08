@@ -1,11 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { platforms, seasons, surveys } from '@/data/mockData';
+import { platforms, seasons } from '@/data/mockData';
 import { useUserCampaigns } from '@/hooks/useUserCampaigns';
+import { useSurveys } from '@/hooks/useSurveys';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import CampaignUploader from '@/components/CampaignUploader';
+import AIInsightPanel from '@/components/AIInsightPanel';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { Campaign, UserRole } from '@/types';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--success))', 'hsl(var(--info))'];
