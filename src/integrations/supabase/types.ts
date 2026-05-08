@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      surveys: {
+        Row: {
+          answers: Json | null
+          campaign_name: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          rating: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          campaign_name?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          campaign_name?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
