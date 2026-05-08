@@ -1,12 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { platforms, seasons } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserCampaigns } from '@/hooks/useUserCampaigns';
 import CampaignUploader from '@/components/CampaignUploader';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, FileText, Lock, Loader2 } from 'lucide-react';
+import { Plus, Download, FileText, Lock, Loader2, Pencil, Trash2, Check, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const statusColors: Record<string, string> = {
   Active: 'bg-success/10 text-success',
@@ -15,13 +19,16 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Campaigns() {
-  const { hasPermission, user } = useAuth();
-  const canCreate = hasPermission('campaign.create');
+  const { user } = useAuth();
   const { campaigns, loading, refetch } = useUserCampaigns(true);
   const [platformFilter, setPlatformFilter] = useState('All');
   const [seasonFilter, setSeasonFilter] = useState('All');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<{ name: string; budget: number; revenue: number; status: string }>({ name: '', budget: 0, revenue: 0, status: 'Active' });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const uploaderRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     return campaigns.filter(c =>
@@ -32,31 +39,45 @@ export default function Campaigns() {
     );
   }, [campaigns, platformFilter, seasonFilter, dateFrom, dateTo]);
 
-  const handleNew = async () => {
-    if (!canCreate || !user) {
-      toast({ title: 'Access Denied', description: `Your role (${user?.role || 'Guest'}) cannot create campaigns. Contact an Admin or Marketing Manager.`, variant: 'destructive' });
+  const canEditRow = (c: typeof campaigns[number]) =>
+    !!user && (user.role === 'Admin' || c.user_id === user._id);
+
+  const handleNew = () => {
+    if (!user) {
+      toast({ title: 'Access Denied', description: 'Please sign in to create campaigns.', variant: 'destructive' });
       return;
     }
-    try {
-      const { error } = await supabase.from('campaigns').insert({
-        owner_id: user._id,
-        name: `New Campaign ${new Date().toLocaleDateString()}`,
-        platform: 'Instagram',
-        season: 'Summer',
-        status: 'Active',
-        budget: 1000,
-        revenue: 0,
-        roi: 0,
-        success_rate: 0,
-        is_demo: false,
-      });
-      if (error) throw error;
-      toast({ title: 'Campaign created', description: 'A new campaign was added to your database.' });
+    uploaderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    toast({ title: 'Upload your dataset', description: 'Use the uploader above to add your campaign data — your dashboard will reflect it.' });
+  };
+
+  const startEdit = (c: typeof campaigns[number]) => {
+    setEditingId(c._id);
+    setEditDraft({ name: c.name, budget: c.budget, revenue: c.revenue, status: c.status });
+  };
+
+  const saveEdit = async (id: string) => {
+    const budget = Number(editDraft.budget) || 0;
+    const revenue = Number(editDraft.revenue) || 0;
+    const roi = budget > 0 ? Math.round(((revenue - budget) / budget) * 100) : 0;
+    const { error } = await supabase.from('campaigns').update({
+      name: editDraft.name, budget, revenue, roi, status: editDraft.status,
+    }).eq('id', id);
+    if (error) {
+      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Saved', description: 'Campaign updated.' });
+      setEditingId(null);
       refetch();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      toast({ title: 'Create failed', description: msg, variant: 'destructive' });
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await supabase.from('campaigns').delete().eq('id', deleteId);
+    setDeleteId(null);
+    if (error) toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    else { toast({ title: 'Deleted', description: 'Campaign removed.' }); refetch(); }
   };
 
   const downloadCSV = () => {
@@ -119,12 +140,10 @@ export default function Campaigns() {
             <Button
               size="sm"
               onClick={handleNew}
-              disabled={!canCreate}
-              className={canCreate ? "gradient-primary text-primary-foreground border-0" : ""}
-              variant={canCreate ? 'default' : 'outline'}
-              title={canCreate ? 'Create new campaign' : `${user.role} cannot create campaigns`}
+              className="gradient-primary text-primary-foreground border-0"
+              title="Open uploader to add campaign data"
             >
-              {canCreate ? <Plus className="w-4 h-4 mr-1" /> : <Lock className="w-4 h-4 mr-1" />}
+              <Plus className="w-4 h-4 mr-1" />
               New
             </Button>
           )}
@@ -132,7 +151,7 @@ export default function Campaigns() {
       </div>
 
       {user && (
-        <div className="mb-6">
+        <div className="mb-6" ref={uploaderRef}>
           <CampaignUploader onUploaded={refetch} />
         </div>
       )}
@@ -152,35 +171,88 @@ export default function Campaigns() {
                   <th className="text-left p-4 font-medium text-muted-foreground">ROI</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Season</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(c => (
-                  <tr key={c._id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="p-4">
-                      <p className="font-medium">{c.name}</p>
-                      {c.product_id && <p className="text-xs text-muted-foreground">{c.product_id}</p>}
-                    </td>
-                    <td className="p-4">{c.platform}</td>
-                    <td className="p-4">${c.budget.toLocaleString()}</td>
-                    <td className="p-4 font-medium">${c.revenue.toLocaleString()}</td>
-                    <td className="p-4">
-                      <span className={c.ROI >= 200 ? 'text-success font-medium' : ''}>{c.ROI}%</span>
-                    </td>
-                    <td className="p-4">{c.season}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[c.status]}`}>{c.status}</span>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map(c => {
+                  const editable = canEditRow(c);
+                  const isEditing = editingId === c._id;
+                  return (
+                    <tr key={c._id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        {isEditing ? (
+                          <input value={editDraft.name} onChange={e => setEditDraft(d => ({ ...d, name: e.target.value }))} className="w-full px-2 py-1 rounded border border-input bg-background text-sm" />
+                        ) : (
+                          <>
+                            <p className="font-medium">{c.name}</p>
+                            {c.product_id && <p className="text-xs text-muted-foreground">{c.product_id}</p>}
+                          </>
+                        )}
+                      </td>
+                      <td className="p-4">{c.platform}</td>
+                      <td className="p-4">
+                        {isEditing
+                          ? <input type="number" value={editDraft.budget} onChange={e => setEditDraft(d => ({ ...d, budget: Number(e.target.value) }))} className="w-24 px-2 py-1 rounded border border-input bg-background text-sm" />
+                          : `$${c.budget.toLocaleString()}`}
+                      </td>
+                      <td className="p-4 font-medium">
+                        {isEditing
+                          ? <input type="number" value={editDraft.revenue} onChange={e => setEditDraft(d => ({ ...d, revenue: Number(e.target.value) }))} className="w-24 px-2 py-1 rounded border border-input bg-background text-sm" />
+                          : `$${c.revenue.toLocaleString()}`}
+                      </td>
+                      <td className="p-4">
+                        <span className={c.ROI >= 200 ? 'text-success font-medium' : ''}>{c.ROI}%</span>
+                      </td>
+                      <td className="p-4">{c.season}</td>
+                      <td className="p-4">
+                        {isEditing ? (
+                          <select value={editDraft.status} onChange={e => setEditDraft(d => ({ ...d, status: e.target.value }))} className="px-2 py-1 rounded border border-input bg-background text-sm">
+                            <option>Active</option><option>Paused</option><option>Completed</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[c.status]}`}>{c.status}</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        {isEditing ? (
+                          <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="ghost" onClick={() => saveEdit(c._id)}><Check className="w-4 h-4 text-success" /></Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="w-4 h-4" /></Button>
+                          </div>
+                        ) : editable ? (
+                          <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="ghost" onClick={() => startEdit(c)} title="Edit"><Pencil className="w-4 h-4" /></Button>
+                            <Button size="sm" variant="ghost" onClick={() => setDeleteId(c._id)} title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                          </div>
+                        ) : (
+                          <Lock className="w-4 h-4 text-muted-foreground inline" />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">No campaigns yet. Upload a dataset to get started.</td></tr>
+                  <tr><td colSpan={8} className="text-center py-12 text-muted-foreground">No campaigns yet. Upload a dataset to get started.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
       )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={o => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this campaign?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

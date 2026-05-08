@@ -1,11 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { platforms, seasons, surveys } from '@/data/mockData';
+import { platforms, seasons } from '@/data/mockData';
 import { useUserCampaigns } from '@/hooks/useUserCampaigns';
+import { useSurveys } from '@/hooks/useSurveys';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import CampaignUploader from '@/components/CampaignUploader';
+import AIInsightPanel from '@/components/AIInsightPanel';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Target, BarChart3, Users, Settings, FileText, ClipboardList, Shield, Eye, Download, Plus, Filter, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { Campaign, UserRole } from '@/types';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--success))', 'hsl(var(--info))'];
@@ -107,10 +116,13 @@ function KPICard({ icon: Icon, label, value, color, delay }: { icon: React.Eleme
 }
 
 export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
+  const { user } = useAuth();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  // Per-user data: own uploads if any, else demo seed
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { campaigns: dbCampaigns, loading, refetch } = useUserCampaigns(true);
+  const { surveys } = useSurveys();
 
   const campaigns = useMemo(
     () => dbCampaigns.filter(c =>
@@ -121,6 +133,16 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
   );
 
   const hasOwnData = dbCampaigns.some(c => !c.is_demo);
+
+  const resetMyData = async () => {
+    if (!user) return;
+    setResetting(true);
+    const { error } = await supabase.from('campaigns').delete().eq('owner_id', user._id);
+    setResetting(false);
+    setResetOpen(false);
+    if (error) toast({ title: 'Reset failed', description: error.message, variant: 'destructive' });
+    else { toast({ title: 'Data reset', description: 'Your campaigns were removed. Upload a new dataset to repopulate.' }); refetch(); }
+  };
 
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
@@ -175,10 +197,19 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
             <p className="text-xs text-primary font-medium mt-1">Logged in as {userName} · {role}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors self-start" onClick={() => generateDashboardPDF(role, userName, campaigns)}>
-          <Download className="w-4 h-4 mr-1" /> PDF Report
-        </Button>
+        <div className="flex gap-2 self-start">
+          {hasOwnData && (
+            <Button variant="outline" size="sm" onClick={() => setResetOpen(true)} className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
+              <Trash2 className="w-4 h-4 mr-1" /> Reset my data
+            </Button>
+          )}
+          <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors" onClick={() => generateDashboardPDF(role, userName, campaigns)}>
+            <Download className="w-4 h-4 mr-1" /> PDF Report
+          </Button>
+        </div>
       </div>
+
+      <AIInsightPanel campaigns={campaigns} role={role} />
 
       {/* Date Range Filter + Role Actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 p-4 bg-card border border-border rounded-xl animate-slide-up">
@@ -480,7 +511,7 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {Object.entries(s.answers).map(([k, v]) => (
-                        <span key={k} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{k}: {v}</span>
+                        <span key={k} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{k}: {String(v)}</span>
                       ))}
                     </div>
                   </div>
@@ -529,6 +560,23 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
           </div>
         </>
       )}
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset all your campaign data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes every campaign you've uploaded. Demo data will reappear until you upload again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={resetMyData} disabled={resetting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {resetting ? 'Resetting…' : 'Reset'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

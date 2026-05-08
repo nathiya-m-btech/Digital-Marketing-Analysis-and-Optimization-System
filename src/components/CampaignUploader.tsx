@@ -64,7 +64,7 @@ export default function CampaignUploader({ onUploaded }: Props) {
   const { user, hasPermission } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const canUpload = hasPermission('campaign.create');
+  const canUpload = hasPermission('campaign.upload');
 
   const handleFile = async (file: File) => {
     if (!user || !canUpload) {
