@@ -116,10 +116,13 @@ function KPICard({ icon: Icon, label, value, color, delay }: { icon: React.Eleme
 }
 
 export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
+  const { user } = useAuth();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  // Per-user data: own uploads if any, else demo seed
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { campaigns: dbCampaigns, loading, refetch } = useUserCampaigns(true);
+  const { surveys } = useSurveys();
 
   const campaigns = useMemo(
     () => dbCampaigns.filter(c =>
@@ -130,6 +133,16 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
   );
 
   const hasOwnData = dbCampaigns.some(c => !c.is_demo);
+
+  const resetMyData = async () => {
+    if (!user) return;
+    setResetting(true);
+    const { error } = await supabase.from('campaigns').delete().eq('owner_id', user._id);
+    setResetting(false);
+    setResetOpen(false);
+    if (error) toast({ title: 'Reset failed', description: error.message, variant: 'destructive' });
+    else { toast({ title: 'Data reset', description: 'Your campaigns were removed. Upload a new dataset to repopulate.' }); refetch(); }
+  };
 
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
