@@ -5,6 +5,7 @@ import type { User, UserRole } from '@/types';
 
 export type Permission =
   | 'campaign.create'
+  | 'campaign.upload'
   | 'campaign.edit'
   | 'campaign.delete'
   | 'campaign.view'
@@ -19,15 +20,15 @@ export type Permission =
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   'Admin': [
-    'campaign.create', 'campaign.edit', 'campaign.delete', 'campaign.view',
+    'campaign.create', 'campaign.upload', 'campaign.edit', 'campaign.delete', 'campaign.view',
     'survey.submit', 'survey.view', 'analytics.view', 'analytics.export',
     'users.manage', 'system.settings', 'revenue.view', 'strategy.view',
   ],
   'CMO': ['campaign.view', 'analytics.view', 'analytics.export', 'revenue.view', 'strategy.view', 'survey.view'],
-  'Marketing Manager': ['campaign.create', 'campaign.edit', 'campaign.view', 'analytics.view', 'analytics.export', 'survey.view'],
-  'Business Owner': ['campaign.view', 'analytics.view', 'revenue.view'],
-  'Digital Marketing Specialist': ['campaign.view', 'analytics.view', 'analytics.export', 'survey.view', 'survey.submit'],
-  'Freelancer': ['campaign.view', 'survey.submit'],
+  'Marketing Manager': ['campaign.create', 'campaign.upload', 'campaign.edit', 'campaign.view', 'analytics.view', 'analytics.export', 'survey.view'],
+  'Business Owner': ['campaign.view', 'campaign.upload', 'analytics.view', 'revenue.view', 'survey.submit'],
+  'Digital Marketing Specialist': ['campaign.view', 'campaign.upload', 'analytics.view', 'analytics.export', 'survey.view', 'survey.submit'],
+  'Freelancer': ['campaign.view', 'campaign.upload', 'survey.submit'],
 };
 
 interface AuthContextType {
