@@ -197,10 +197,19 @@ export default function RoleDashboard({ role, userName }: RoleDashboardProps) {
             <p className="text-xs text-primary font-medium mt-1">Logged in as {userName} · {role}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors self-start" onClick={() => generateDashboardPDF(role, userName, campaigns)}>
-          <Download className="w-4 h-4 mr-1" /> PDF Report
-        </Button>
+        <div className="flex gap-2 self-start">
+          {hasOwnData && (
+            <Button variant="outline" size="sm" onClick={() => setResetOpen(true)} className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
+              <Trash2 className="w-4 h-4 mr-1" /> Reset my data
+            </Button>
+          )}
+          <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors" onClick={() => generateDashboardPDF(role, userName, campaigns)}>
+            <Download className="w-4 h-4 mr-1" /> PDF Report
+          </Button>
+        </div>
       </div>
+
+      <AIInsightPanel campaigns={campaigns} role={role} />
 
       {/* Date Range Filter + Role Actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 p-4 bg-card border border-border rounded-xl animate-slide-up">
