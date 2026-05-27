@@ -21,7 +21,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       if (isSignup) {
-        const result = await signup(name, email, password, role);
+        const result = await signup(name, email, password, 'Freelancer');
         if (!result.success) {
           toast({ title: 'Signup failed', description: result.error, variant: 'destructive' });
           return;
