@@ -15,7 +15,6 @@ export default function Login() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('Marketing Manager');
   const [submitting, setSubmitting] = useState(false);
   const { login, signup } = useAuth();
   const navigate = useNavigate();
