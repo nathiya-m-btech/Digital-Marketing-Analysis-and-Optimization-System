@@ -6,9 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import type { UserRole } from '@/types';
-
-const roles: UserRole[] = ['Admin', 'Marketing Manager', 'Business Owner', 'Freelancer', 'Digital Marketing Specialist', 'CMO'];
 
 export default function Login() {
   const [isSignup, setIsSignup] = useState(false);
