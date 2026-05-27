@@ -6,16 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import type { UserRole } from '@/types';
-
-const roles: UserRole[] = ['Admin', 'Marketing Manager', 'Business Owner', 'Freelancer', 'Digital Marketing Specialist', 'CMO'];
 
 export default function Login() {
   const [isSignup, setIsSignup] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('Marketing Manager');
   const [submitting, setSubmitting] = useState(false);
   const { login, signup } = useAuth();
   const navigate = useNavigate();
@@ -25,7 +21,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       if (isSignup) {
-        const result = await signup(name, email, password, role);
+        const result = await signup(name, email, password, 'Freelancer');
         if (!result.success) {
           toast({ title: 'Signup failed', description: result.error, variant: 'destructive' });
           return;
@@ -73,17 +69,7 @@ export default function Login() {
             <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
           </div>
           {isSignup && (
-            <div>
-              <Label>Role</Label>
-              <select
-                value={role}
-                onChange={e => setRole(e.target.value as UserRole)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-              >
-                {roles.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-              <p className="text-xs text-muted-foreground mt-1">Your role determines your dashboard view & permissions</p>
-            </div>
+            <p className="text-xs text-muted-foreground">New accounts are created with the Freelancer role. An administrator can grant additional access from the Users page.</p>
           )}
           <Button type="submit" disabled={submitting} className="w-full gradient-primary text-primary-foreground border-0">
             {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
