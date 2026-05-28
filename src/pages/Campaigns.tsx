@@ -92,6 +92,7 @@ export default function Campaigns() {
 
   const downloadPDF = () => {
     const total = filtered.length || 1;
+    const esc = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const html = `<html><head><title>MarketPulse Campaign Report</title>
       <style>body{font-family:'Segoe UI',sans-serif;padding:40px;color:#1a1a1a}h1{color:#6366f1;font-size:28px;margin-bottom:4px}.subtitle{color:#888;font-size:14px;margin-bottom:30px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;padding:10px 12px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:600}td{padding:10px 12px;border-bottom:1px solid #e5e7eb}.positive{color:#22c55e;font-weight:600}.status{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}.status-Active{background:#dcfce7;color:#16a34a}.status-Paused{background:#fef3c7;color:#d97706}.status-Completed{background:#f3f4f6;color:#6b7280}.summary{display:flex;gap:24px;margin-bottom:30px}.summary-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px 24px}.summary-card .label{font-size:12px;color:#888}.summary-card .value{font-size:24px;font-weight:700}.footer{margin-top:40px;text-align:center;color:#aaa;font-size:11px}</style>
       </head><body>
@@ -103,7 +104,7 @@ export default function Campaigns() {
         <div class="summary-card"><div class="label">Avg ROI</div><div class="value">${Math.round(filtered.reduce((s, c) => s + c.ROI, 0) / total)}%</div></div>
       </div>
       <table><thead><tr><th>Campaign</th><th>Platform</th><th>Budget</th><th>Revenue</th><th>ROI</th><th>Season</th><th>Status</th></tr></thead>
-      <tbody>${filtered.map(c => `<tr><td><strong>${c.name}</strong></td><td>${c.platform}</td><td>$${c.budget.toLocaleString()}</td><td>$${c.revenue.toLocaleString()}</td><td class="${c.ROI >= 200 ? 'positive' : ''}">${c.ROI}%</td><td>${c.season}</td><td><span class="status status-${c.status}">${c.status}</span></td></tr>`).join('')}</tbody></table>
+      <tbody>${filtered.map(c => `<tr><td><strong>${esc(c.name)}</strong></td><td>${esc(c.platform)}</td><td>$${c.budget.toLocaleString()}</td><td>$${c.revenue.toLocaleString()}</td><td class="${c.ROI >= 200 ? 'positive' : ''}">${c.ROI}%</td><td>${esc(c.season)}</td><td><span class="status status-${esc(c.status)}">${esc(c.status)}</span></td></tr>`).join('')}</tbody></table>
       <div class="footer">MarketPulse © ${new Date().getFullYear()} • Confidential</div>
       </body></html>`;
     const w = window.open('', '_blank');
