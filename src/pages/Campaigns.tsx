@@ -104,7 +104,7 @@ export default function Campaigns() {
         <div class="summary-card"><div class="label">Avg ROI</div><div class="value">${Math.round(filtered.reduce((s, c) => s + c.ROI, 0) / total)}%</div></div>
       </div>
       <table><thead><tr><th>Campaign</th><th>Platform</th><th>Budget</th><th>Revenue</th><th>ROI</th><th>Season</th><th>Status</th></tr></thead>
-      <tbody>${filtered.map(c => `<tr><td><strong>${c.name}</strong></td><td>${c.platform}</td><td>$${c.budget.toLocaleString()}</td><td>$${c.revenue.toLocaleString()}</td><td class="${c.ROI >= 200 ? 'positive' : ''}">${c.ROI}%</td><td>${c.season}</td><td><span class="status status-${c.status}">${c.status}</span></td></tr>`).join('')}</tbody></table>
+      <tbody>${filtered.map(c => `<tr><td><strong>${esc(c.name)}</strong></td><td>${esc(c.platform)}</td><td>$${c.budget.toLocaleString()}</td><td>$${c.revenue.toLocaleString()}</td><td class="${c.ROI >= 200 ? 'positive' : ''}">${c.ROI}%</td><td>${esc(c.season)}</td><td><span class="status status-${esc(c.status)}">${esc(c.status)}</span></td></tr>`).join('')}</tbody></table>
       <div class="footer">MarketPulse © ${new Date().getFullYear()} • Confidential</div>
       </body></html>`;
     const w = window.open('', '_blank');
